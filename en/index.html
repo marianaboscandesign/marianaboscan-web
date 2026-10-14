@@ -75,7 +75,7 @@ var d=document.querySelector('details.idioma');if(d){document.addEventListener('
 </script>
 <script>
 (function(){
-var ENDPOINT="PEGA_AQUI_LA_URL_DE_TU_APPS_SCRIPT",M={"ok": "Thank you! I got your message and I’ll reply soon.", "err": "I couldn’t send the message. Please email or WhatsApp me directly.", "inv": "Please fill in your name, a valid email and a message.", "lim": "You’ve sent several messages in a row. Try again later or message me on WhatsApp.", "enviando": "Sending…", "enviar": "Send message"},IDIOMA="en";
+var ENDPOINT="https://script.google.com/macros/s/AKfycbyPGrFhGQFpCaKIa1HACdf1oGdl0Xd4BDnkbMsJFDCkpSmVYo_t8LmkTzR0RAoNGSaRxw/exec",M={"ok": "Thank you! I got your message and I’ll reply soon.", "err": "I couldn’t send the message. Please email or WhatsApp me directly.", "inv": "Please fill in your name, a valid email and a message.", "lim": "You’ve sent several messages in a row. Try again later or message me on WhatsApp.", "enviando": "Sending…", "enviar": "Send message"},IDIOMA="en";
 var f=document.getElementById('form'),b=document.getElementById('enviar'),s=document.getElementById('estado');
 function aviso(t,err){s.innerHTML='';var p=document.createElement('p');p.className='aviso'+(err?' error':'');p.textContent=t;s.appendChild(p);}
 f.addEventListener('submit',function(e){e.preventDefault();
