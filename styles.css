@@ -130,6 +130,10 @@ h3{font-size:20px;line-height:28px}
 .datos strong{display:block;font-size:12px;line-height:16px;letter-spacing:.12em;text-transform:uppercase;color:var(--texto-suave);font-weight:500}
 .campo{margin-bottom:var(--e6)} .campo label{display:block;font-weight:500;margin-bottom:var(--e2)}
 input[type=text],input[type=email],textarea{display:block;width:100%;font:inherit;color:var(--texto);padding:var(--e3) var(--e4);background:var(--fondo);border:1px solid var(--linea-control);border-radius:var(--r-sm)}
+input[type=tel],select{display:block;width:100%;font:inherit;color:var(--texto);padding:var(--e3) var(--e4);background:var(--fondo);border:1px solid var(--linea-control);border-radius:var(--r-sm)}
+select{appearance:none;-webkit-appearance:none;padding-right:44px;cursor:pointer} select:focus,input[type=tel]:focus{border-color:var(--texto)}
+.sel{position:relative} .sel .chev{position:absolute;right:14px;top:50%;width:18px;height:18px;margin-top:-9px;pointer-events:none;color:var(--texto-suave);stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.fila2{display:grid;gap:0 var(--e4)} @media(min-width:640px){.fila2{grid-template-columns:1fr 1fr}}
 textarea{min-height:160px;resize:vertical} input:focus,textarea:focus{border-color:var(--texto)}
 .trampa{position:absolute;left:-9999px;height:0;overflow:hidden}
 .aviso{margin:var(--e4) 0 0;padding:var(--e3) var(--e4);border-radius:var(--r-sm);background:var(--lavanda-suave)} .aviso.error{background:var(--rosa-suave)}
