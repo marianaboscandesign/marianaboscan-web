@@ -345,3 +345,6 @@ html{scroll-behavior:smooth}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .apps .ic-n{display:none}:root:not([data-theme="light"]) .apps .ic-b{display:block}}
 .h-sec{margin:var(--e10,64px) 0 var(--e6)}
 .herr{gap:var(--e5,20px)}
+
+/* pantallas bajas: la línea de tiempo no se fija (evita que se monte sobre la sección siguiente) */
+@media(max-height:880px){.exp{height:auto;padding:var(--e12) 0}.exp .pin{position:static;height:auto}.exp .tiempo li{opacity:1}}
