@@ -325,8 +325,23 @@ html{scroll-behavior:smooth}
 .carta.f0{top:6%;--off:122px} .carta.f1{top:36%;--off:172px} .carta.f2{top:auto;bottom:5%;--off:208px}
 @media(max-width:899px){
  .hero2{height:auto}.hero2-pin{position:relative;top:0;height:calc(100svh - 72px);min-height:560px}
- .escena2{min-height:260px}
+ .hero2-pin{height:auto;min-height:calc(100svh - 72px)}
+ .escena2{flex:none;height:min(420px,62vw + 120px);min-height:0}
+ .retrato2 img.recorte{-webkit-mask-image:linear-gradient(to bottom,#000 0,#000 55%,transparent 98%);mask-image:linear-gradient(to bottom,#000 0,#000 55%,transparent 98%)}
  .carta{display:none}
  .rueda{display:none}
 }
 @media(prefers-reduced-motion:reduce){.hero2{height:auto}.hero2-pin{position:relative;top:0}.carta{--a:1!important;transform:none!important;opacity:1!important}}
+
+/* ---- herramientas tipo app ---- */
+.herr{display:grid;gap:var(--e6)}
+.grupo-h h3{font-size:12px;line-height:16px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;color:var(--texto-suave);margin:0 0 var(--e3)}
+.apps{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:var(--e4) var(--e3)}
+.apps li{width:76px;display:flex;flex-direction:column;align-items:center;gap:var(--e2);text-align:center}
+.apps img{width:56px;height:56px;border-radius:14px;display:block}
+.apps span{font-size:12px;line-height:15px;color:var(--texto-suave)}
+.apps .ic-b{display:none}
+:root[data-theme="dark"] .apps .ic-n{display:none}:root[data-theme="dark"] .apps .ic-b{display:block}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .apps .ic-n{display:none}:root:not([data-theme="light"]) .apps .ic-b{display:block}}
+.h-sec{margin:var(--e10,64px) 0 var(--e6)}
+.herr{gap:var(--e5,20px)}
