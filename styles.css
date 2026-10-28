@@ -346,5 +346,12 @@ html{scroll-behavior:smooth}
 .h-sec{margin:var(--e10,64px) 0 var(--e6)}
 .herr{gap:var(--e5,20px)}
 
-/* pantallas bajas: la línea de tiempo no se fija (evita que se monte sobre la sección siguiente) */
-@media(max-height:880px){.exp{height:auto;padding:var(--e12) 0}.exp .pin{position:static;height:auto}.exp .tiempo li{opacity:1}}
+/* pantallas bajas: la línea de tiempo se compacta para caber en la pantalla fija */
+@media(min-width:860px) and (max-height:880px){
+ .exp .tiempo li{padding:clamp(5px,1.4vh,16px) 0;gap:0 var(--e8)}
+ .exp .tiempo h3{font-size:clamp(14px,2.3vh,22px);line-height:1.25}
+ .exp .tiempo .emp{margin:1px 0 2px;font-size:clamp(12px,1.8vh,15px)}
+ .exp .tiempo p:last-child{font-size:clamp(11px,1.7vh,15px);line-height:1.35}
+ .exp .tiempo .anos{font-size:clamp(14px,2.3vh,22px)}
+}
+@media(min-width:860px) and (max-height:620px){.exp .tiempo p:last-child{display:none}}
