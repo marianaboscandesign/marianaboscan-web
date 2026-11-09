@@ -54,14 +54,24 @@ def sacar_imagenes(pagina_url, timeout=60000):
         from playwright.sync_api import sync_playwright
     js = r"""async () => {
         const html = document.documentElement.innerHTML.split('\\/').join('/').split('&amp;').join('&');
-        const re = /https?:\/\/[^"'\s)\\]+\/project_modules\/[^"'\s)\\]+\.(?:png|jpe?g|webp|gif)/gi;
-        const urls = [...new Set(html.match(re) || [])];
+        const re = /https?:\/\/[^"'\s)\\<>]+?(?:\/project_modules\/[^"'\s)\\<>]+\.(?:png|jpe?g|webp|gif)|myportfolio\.com\/[0-9a-f-]{36}\/[^"'\s)\\<>]+_rw_\d+\.(?:png|jpe?g|webp|gif)(?:\?h=[0-9a-f]+)?)/gi;
+        const todas = html.match(re) || [];
+        const grupos = new Map();   // una entrada por imagen, quedándonos con la versión más grande
+        for (const u of todas) {
+            let k, w;
+            const m1 = u.match(/project_modules\/([^\/]+)\/([^\/?]+)$/);
+            const m2 = u.match(/myportfolio\.com\/[0-9a-f-]{36}\/([0-9a-f-]{36})_rw_(\d+)\./i);
+            if (m1) { k = m1[2]; w = 1; } else if (m2) { k = m2[1]; w = +m2[2]; } else continue;
+            const g = grupos.get(k);
+            if (!g) grupos.set(k, {u, w}); else if (w > g.w) { g.u = u; g.w = w; }
+        }
         const out = [];
-        for (const u of urls) {
+        for (const [k, g] of grupos) {
+            let u = g.u.replace(/project_modules\/[^\/]+\//, 'project_modules/max_1200/');
             const dim = await new Promise(r => { const im = new Image(); im.onload = () => r([im.naturalWidth, im.naturalHeight]); im.onerror = () => r(null); im.src = u; setTimeout(() => r(null), 8000); });
             if (dim && dim[0] >= 300) out.push([u, Math.round(dim[1] / dim[0] * 1000) / 10]);
         }
-        return {titulo: document.title, urls: urls.length, imgs: out, muestra: urls.slice(0, 3)};
+        return {titulo: document.title, urls: todas.length, grupos: grupos.size, imgs: out, muestra: [...grupos.values()].slice(0, 4).map(g => g.u)};
     }"""
     with sync_playwright() as pw:
         nav = pw.chromium.launch()
@@ -75,12 +85,12 @@ def sacar_imagenes(pagina_url, timeout=60000):
             alto = max(alto, pg.evaluate('document.body.scrollHeight'))
         pg.wait_for_timeout(1500)
         res = pg.evaluate(js)
-        print('  URLs de imágenes encontradas:', res['urls'], '| válidas:', len(res['imgs']), '| ejemplo:', res['muestra'])
+        print('  URLs encontradas:', res['urls'], '| imágenes distintas:', res['grupos'], '| válidas:', len(res['imgs']))
+        for m in res['muestra']: print('   ·', m[:140])
         crudas = res['imgs']
         nav.close()
     vistas, salida = set(), []
     for u, pct in crudas:
-        u = re.sub(r'project_modules/[^/]+/', 'project_modules/max_1200/', u)
         if u in vistas: continue
         vistas.add(u); salida.append([u, pct])
     return salida
