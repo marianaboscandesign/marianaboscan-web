@@ -407,13 +407,14 @@ def pagina_proyecto_ext(e, lang):
     piezas = []
     for i, m in enumerate(e['imgs']):
         url, pct = m[0], (m[1] if len(m) > 1 else None)
+        if not url.startswith('http'): url = rel(aqui, 'img/') + url          # imagen local: img/proyectos/<id>/NN.webp
         est = f' style="aspect-ratio:100/{pct}"' if pct else ''
         piezas.append(f'<div class="pieza"{est}><img src="{esc(url)}" alt="{esc(e["marca"])} — {esc(desc)}" loading="{"eager" if i == 0 else "lazy"}" decoding="async"></div>')
     cuerpo = f'''<section class="cab-pagina wrap" style="padding-bottom:var(--e8)"><h1 style="font-size:clamp(40px,7vw,80px)">{esc(e['marca'])}</h1><p class="lead">{esc(desc)}</p></section>
 <section class="wrap"><div class="pila">{''.join(piezas)}</div>
 <div class="pager"><a class="btn" href="{rel(aqui, ruta('portafolio', lang))}">{esc(t['volver'])}</a><a class="btn" href="{esc(e['link'])}" target="_blank" rel="noopener">{esc(t['ver_behance'])} ↗</a></div></section>'''
     otra = proy_ruta(e['slug'], 'en' if lang == 'es' else 'es')
-    return pagina(lang, aqui, 'portafolio', f"{e['marca']} — {desc} | Mariana Boscán", f"{e['marca']}: {desc}. {t['desc_sitio']}"[:250], cuerpo, otra, og_img=e['imgs'][0][0])
+    return pagina(lang, aqui, 'portafolio', f"{e['marca']} — {desc} | Mariana Boscán", f"{e['marca']}: {desc}. {t['desc_sitio']}"[:250], cuerpo, otra, og_img=e['imgs'][0][0] if e['imgs'][0][0].startswith('http') else SITIO + '/img/' + e['imgs'][0][0])
 
 
 ICONO_SOL = '<svg class="i-sol" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>'
