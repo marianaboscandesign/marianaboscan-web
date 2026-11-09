@@ -59,6 +59,7 @@ META = {
 }
 REDES_ICO = [('TikTok', REDES[0][1], 'tiktok'), ('LinkedIn', REDES[1][1], 'linkedin'), ('Behance', REDES[2][1], 'behance'),
              ('WhatsApp', WHATSAPP, 'whatsapp'), ('Email', 'mailto:' + EMAIL, 'correo')]
+HOME_NUEVOS = 3   # cuántos proyectos nuevos de Behance se muestran primero en el home
 DESTACADOS = ['disidente-studio-brand-identity', 'usphysique-brand-book', 'edunova-web-design-ui',
               'chontadooroh-republic-packaging-design', 'spa-magical-hands-brand-identity', 'huba-kindergarten-visual-identity-ad-design']
 CATS = {'branding': ('Branding', 'Branding'), 'web': ('Web', 'Web'), 'social': ('Social media', 'Social media'),
@@ -595,10 +596,16 @@ def galeria(lang, aqui):
     t = UI[lang]
     P = {p['s']: p for p in D['proyectos']}
     tarjetas = []
-    for i, s in enumerate(DESTACADOS):
+    for e in NUEVOS[:HOME_NUEVOS]:      # los proyectos más recientes de Behance van primero
+        desc = e['des'] if lang == 'es' else e['den']
+        href = rel(aqui, proy_ruta(e['slug'], lang)) if e.get('imgs') else esc(e['link'])
+        ext = '' if e.get('imgs') else ' target="_blank" rel="noopener"'
+        tarjetas.append(f'<a class="gcard" href="{href}"{ext}><div class="img"><img src="{esc(e["cover"])}" alt="{esc(e["marca"] + " — " + desc)}" width="640" height="480" loading=lazy decoding="async"></div>'
+                        f'<div class="meta"><span class="num" aria-hidden="true">{len(tarjetas) + 1:02d}</span><div><h3>{esc(e["marca"])}</h3><p>{esc(desc)}</p></div></div></a>')
+    for s in DESTACADOS:
         p = P[s]; marca, des, den, cat = META[s]; desc = des if lang == 'es' else den
         tarjetas.append(f'<a class="gcard" href="{rel(aqui, proy_ruta(s, lang))}"><div class="img">{img_portada(p, marca + " — " + desc, aqui)}</div>'
-                        f'<div class="meta"><span class="num" aria-hidden="true">{i + 1:02d}</span><div><h3>{esc(marca)}</h3><p>{esc(desc)}</p></div></div></a>')
+                        f'<div class="meta"><span class="num" aria-hidden="true">{len(tarjetas) + 1:02d}</span><div><h3>{esc(marca)}</h3><p>{esc(desc)}</p></div></div></a>')
     tarjetas.append(f'<a class="gcard final" href="{rel(aqui, ruta("portafolio", lang))}"><span>{esc(t["galeria_ver"])}</span>{ico("flecha")}</a>')
     return f'''<section class="galeria" id="proyectos" data-nombre="{esc(t['secciones'][2])}" data-nav="portafolio" style="--n:{len(tarjetas)}"><div class="pin"><h2 class="gtitulo">{esc(t['galeria_h'])}</h2><div class="pista">{''.join(tarjetas)}</div></div></section>'''
 
