@@ -52,19 +52,31 @@ def sacar_imagenes(pagina_url, timeout=60000):
         subprocess.run([sys.executable, '-m', 'pip', 'install', '-q', 'playwright'], check=True)
         subprocess.run([sys.executable, '-m', 'playwright', 'install', '--with-deps', 'chromium'], check=True)
         from playwright.sync_api import sync_playwright
-    js = """() => [...document.images].filter(i => /project_modules\\//.test(i.currentSrc || i.src) && i.naturalWidth >= 300)
-        .map(i => [i.currentSrc || i.src, Math.round(i.naturalHeight / i.naturalWidth * 1000) / 10])"""
+    js = r"""async () => {
+        const html = document.documentElement.innerHTML.split('\\/').join('/').split('&amp;').join('&');
+        const re = /https?:\/\/[^"'\s)\\]+\/project_modules\/[^"'\s)\\]+\.(?:png|jpe?g|webp|gif)/gi;
+        const urls = [...new Set(html.match(re) || [])];
+        const out = [];
+        for (const u of urls) {
+            const dim = await new Promise(r => { const im = new Image(); im.onload = () => r([im.naturalWidth, im.naturalHeight]); im.onerror = () => r(null); im.src = u; setTimeout(() => r(null), 8000); });
+            if (dim && dim[0] >= 300) out.push([u, Math.round(dim[1] / dim[0] * 1000) / 10]);
+        }
+        return {titulo: document.title, urls: urls.length, imgs: out, muestra: urls.slice(0, 3)};
+    }"""
     with sync_playwright() as pw:
         nav = pw.chromium.launch()
-        pg = nav.new_page(viewport={'width': 1400, 'height': 900}, user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36')
-        pg.goto(pagina_url, timeout=timeout, wait_until='domcontentloaded')
+        pg = nav.new_page(viewport={'width': 1400, 'height': 900}, locale='en-US', user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36')
+        resp = pg.goto(pagina_url, timeout=timeout, wait_until='domcontentloaded')
+        print('  Behance respondió:', resp.status if resp else '?', '| título:', pg.title()[:80])
         pg.wait_for_timeout(3000)
         alto = pg.evaluate('document.body.scrollHeight')
         for y in range(0, alto + 700, 600):
             pg.evaluate(f'window.scrollTo(0,{y})'); pg.wait_for_timeout(350)
             alto = max(alto, pg.evaluate('document.body.scrollHeight'))
         pg.wait_for_timeout(1500)
-        crudas = pg.evaluate(js)
+        res = pg.evaluate(js)
+        print('  URLs de imágenes encontradas:', res['urls'], '| válidas:', len(res['imgs']), '| ejemplo:', res['muestra'])
+        crudas = res['imgs']
         nav.close()
     vistas, salida = set(), []
     for u, pct in crudas:
