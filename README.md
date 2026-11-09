@@ -50,5 +50,5 @@ Usa el mismo Apps Script del formulario de logos. Pega de nuevo el `Code.gs` act
 - `.github/workflows/sitio.yml` corre cada 6 horas (y cuando subes cambios): lee Behance, construye el sitio y lo publica. También hay un botón "Run workflow" en la pestaña Actions.
 - Para cambiar desde qué fecha entran proyectos solos, edita `DESDE` en `scripts/sync_behance.py`.
 
-### Páginas internas para proyectos de Behance
-Las tarjetas nuevas abren Behance hasta que exista `data/imagenes/<ID>.json`. Con ese archivo el sitio genera la página interna (ES/EN) con las imágenes y la tarjeta enlaza a ella. Para crearlo usa `herramientas/marcador-behance.html` (marcador para el navegador).
+### Páginas internas para proyectos de Behance (automático)
+Cada 6 horas la Action lee el feed de Behance, agrega los proyectos nuevos y abre cada uno en un navegador para guardar sus imágenes en `data/imagenes/<ID>.json`. Con eso el sitio crea la página interna (ES/EN). Si Behance bloquea la lectura de imágenes, la tarjeta enlaza a Behance hasta que se pueda; el respaldo manual es `herramientas/marcador-behance.html`.

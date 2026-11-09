@@ -3,7 +3,7 @@
 - Solo agrega proyectos posteriores a DESDE y que no estén ya en el sitio.
 - Nunca sobrescribe una entrada existente: puedes editar a mano marca, descripción y categoría.
 - Si Behance no responde, no hace nada y no rompe la publicación."""
-import json, os, re, sys, unicodedata, urllib.request, xml.etree.ElementTree as ET
+import json, os, re, subprocess, sys, unicodedata, urllib.request, xml.etree.ElementTree as ET
 from email.utils import parsedate_to_datetime
 
 USUARIO = 'marianaboscan'
@@ -41,13 +41,61 @@ def a_es(t):
     for en, es in ES: t = re.sub(en, es, t, flags=re.I)
     return t.replace(' & ', ' y ')
 
+DIR_IMG = os.path.join(AQUI, 'data', 'imagenes')
+
+def sacar_imagenes(pagina_url, timeout=60000):
+    """Abre el proyecto en un navegador (Playwright) y devuelve [[url, alto%], ...] de las imágenes del proyecto."""
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        print('Instalando navegador (una sola vez por ejecución)…')
+        subprocess.run([sys.executable, '-m', 'pip', 'install', '-q', 'playwright'], check=True)
+        subprocess.run([sys.executable, '-m', 'playwright', 'install', '--with-deps', 'chromium'], check=True)
+        from playwright.sync_api import sync_playwright
+    js = """() => [...document.images].filter(i => /project_modules\\//.test(i.currentSrc || i.src) && i.naturalWidth >= 300)
+        .map(i => [i.currentSrc || i.src, Math.round(i.naturalHeight / i.naturalWidth * 1000) / 10])"""
+    with sync_playwright() as pw:
+        nav = pw.chromium.launch()
+        pg = nav.new_page(viewport={'width': 1400, 'height': 900}, user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36')
+        pg.goto(pagina_url, timeout=timeout, wait_until='domcontentloaded')
+        pg.wait_for_timeout(3000)
+        alto = pg.evaluate('document.body.scrollHeight')
+        for y in range(0, alto + 700, 600):
+            pg.evaluate(f'window.scrollTo(0,{y})'); pg.wait_for_timeout(350)
+            alto = max(alto, pg.evaluate('document.body.scrollHeight'))
+        pg.wait_for_timeout(1500)
+        crudas = pg.evaluate(js)
+        nav.close()
+    vistas, salida = set(), []
+    for u, pct in crudas:
+        u = re.sub(r'project_modules/[^/]+/', 'project_modules/max_1200/', u)
+        if u in vistas: continue
+        vistas.add(u); salida.append([u, pct])
+    return salida
+
+def completar_imagenes(datos):
+    """Para cada proyecto sin archivo de imágenes, intenta sacarlas de Behance. Si falla, se reintenta en la próxima ejecución."""
+    os.makedirs(DIR_IMG, exist_ok=True)
+    for d in datos:
+        f = os.path.join(DIR_IMG, f"{d['id']}.json")
+        if os.path.exists(f): continue
+        try:
+            imgs = sacar_imagenes(d['link'])
+        except Exception as e:
+            print('No se pudieron leer las imágenes de', d['marca'], '→', str(e)[:200]); continue
+        if len(imgs) >= 2:
+            json.dump({'imgs': imgs}, open(f, 'w', encoding='utf-8'), indent=1)
+            print(f"Imágenes guardadas: {d['marca']} ({len(imgs)})")
+        else:
+            print('Behance no entregó imágenes para', d['marca'], '(se mantiene el enlace a Behance)')
+
 def main():
     try:
         req = urllib.request.Request(FEED, headers={'User-Agent': 'Mozilla/5.0 (compatible; sitio-marianaboscan)'})
         xml = urllib.request.urlopen(req, timeout=30).read()
         items = ET.fromstring(xml).findall('./channel/item')
     except Exception as e:
-        print('No se pudo leer Behance (se deja todo como está):', e); return
+        print('No se pudo leer el feed de Behance:', e); items = []
     datos = json.load(open(ARCHIVO, encoding='utf-8')) if os.path.exists(ARCHIVO) else []
     ids = {str(d['id']) for d in datos}
     sitio = {p['s'] for p in json.load(open(os.path.join(AQUI, 'data', 'proyectos.json'), encoding='utf-8'))['proyectos']}
@@ -69,6 +117,7 @@ def main():
     if nuevos:
         json.dump(datos, open(ARCHIVO, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     print(f'{nuevos} proyecto(s) nuevo(s).')
+    completar_imagenes(datos)
 
 if __name__ == '__main__':
     main()
