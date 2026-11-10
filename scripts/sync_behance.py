@@ -127,7 +127,13 @@ def main():
         m = re.search(r'/gallery/(\d+)/([^/?#]+)', link)
         if not m: continue
         pid, slug = m.group(1), m.group(2)
-        if pid in ids or norm(slug) in sitio: continue
+        if pid in ids:      # ya existe: solo se actualiza la portada si la cambiaste en Behance
+            im0 = re.search(r"src='([^']+)'", it.findtext('description') or '')
+            d0 = next(d for d in datos if str(d['id']) == pid)
+            if im0 and d0.get('cover') != im0.group(1):
+                d0['cover'] = im0.group(1); nuevos += 1; print('Portada actualizada:', d0['marca'])
+            continue
+        if norm(slug) in sitio: continue
         try: fecha = parsedate_to_datetime(it.findtext('pubDate')).date().isoformat()
         except Exception: fecha = ''
         if fecha and fecha < DESDE: continue
@@ -139,7 +145,8 @@ def main():
     if nuevos:
         json.dump(datos, open(ARCHIVO, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     print(f'{nuevos} proyecto(s) nuevo(s).')
-    completar_imagenes(datos)
+    if os.environ.get('INTENTAR_IMAGENES') == '1':   # Behance bloquea esta lectura desde GitHub (403); se usa el marcador del navegador
+        completar_imagenes(datos)
 
 if __name__ == '__main__':
     main()
