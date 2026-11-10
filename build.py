@@ -428,12 +428,15 @@ def tarjeta_ext(e, lang, n, aqui):
 def pagina_proyecto_ext(e, lang):
     t = UI[lang]; aqui = proy_ruta(e['slug'], lang)
     desc = e['des'] if lang == 'es' else e['den']
-    piezas = []
+    piezas = []          # cada elemento: lista de imágenes; las que llevan un 3.er valor 1 continúan la anterior y se pegan sin espacio (imagen larga cortada en tramos)
     for i, m in enumerate(e['imgs']):
         url, pct = m[0], (m[1] if len(m) > 1 else None)
         if not url.startswith('http'): url = rel(aqui, 'img/') + url          # imagen local: img/proyectos/<id>/NN.webp
-        est = f' style="aspect-ratio:100/{pct}"' if pct else ''
-        piezas.append(f'<div class="pieza"{est}><img src="{esc(url)}" alt="{esc(e["marca"])} — {esc(desc)}" loading="{"eager" if i == 0 else "lazy"}" decoding="async"></div>')
+        dims = f' width="1000" height="{round(pct * 10)}"' if pct else ''
+        img = f'<img src="{esc(url)}" alt="{esc(e["marca"])} — {esc(desc)}"{dims} loading="{"eager" if i == 0 else "lazy"}" decoding="async">'
+        if len(m) > 2 and m[2] and piezas: piezas[-1].append(img)
+        else: piezas.append([img])
+    piezas = [f'<div class="serie">{"".join(g)}</div>' for g in piezas]
     cuerpo = f'''<section class="cab-pagina wrap" style="padding-bottom:var(--e8)"><h1 style="font-size:clamp(40px,7vw,80px)">{esc(e['marca'])}</h1><p class="lead">{esc(desc)}</p></section>
 <section class="wrap"><div class="pila">{''.join(piezas)}</div>
 <div class="pager"><a class="btn" href="{rel(aqui, ruta('portafolio', lang))}">{esc(t['volver'])}</a><a class="btn" href="{esc(e['link'])}" target="_blank" rel="noopener">{esc(t['ver_behance'])} ↗</a></div></section>'''
