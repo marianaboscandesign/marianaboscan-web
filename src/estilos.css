@@ -115,6 +115,8 @@ h3{font-size:20px;line-height:28px}
 .pila{display:flex;flex-direction:column;gap:var(--e4)} @media(min-width:768px){.pila{gap:var(--e6)}}
 .pieza{width:100%;border-radius:var(--r-md);overflow:hidden;background:var(--lavanda-suave);position:relative}
 .pieza img,.pieza iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
+.serie{width:100%;border-radius:var(--r-md);overflow:hidden;background:var(--lavanda-suave);display:flex;flex-direction:column}
+.serie img{display:block;width:100%;height:auto}
 .pager{display:flex;justify-content:space-between;gap:var(--e4);flex-wrap:wrap;padding:var(--e12) 0}
 
 /* ---------- paneles, sobre mí, contacto ---------- */
