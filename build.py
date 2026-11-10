@@ -30,12 +30,22 @@ def _norm(t):
     return re.sub(r'[^a-z0-9]+', '-', t).strip('-')
 if os.path.exists(_nf):
     NUEVOS = sorted(json.load(open(_nf, encoding='utf-8')), key=lambda e: e.get('fecha', ''), reverse=True)
+def limpio(t):
+    """Arregla textos con entidades HTML (&amp; → &) aunque vengan doblemente codificados."""
+    for _ in range(4):
+        u = html.unescape(t)
+        if u == t: break
+        t = u
+    return t
 for _e in NUEVOS:
+    for _k in ('marca', 'des', 'den'): _e[_k] = limpio(_e.get(_k, ''))
     _m = re.search(r'/gallery/\d+/([^/?#]+)', _e['link'])
     _e['slug'] = _norm(_m.group(1)) if _m else 'proyecto-' + str(_e['id'])
-    _fi = os.path.join(AQUI, 'data', 'imagenes', str(_e['id']) + '.json')   # imágenes del proyecto (las genera el marcador o el script)
-    if os.path.exists(_fi):
-        _e['imgs'] = json.load(open(_fi, encoding='utf-8')).get('imgs', [])
+    _e['clave'] = _norm(_e['marca'])      # las imágenes pueden llamarse por ID (258152879.json) o por marca (flick.json)
+    for _n in (str(_e['id']), _e['clave']):
+        _fi = os.path.join(AQUI, 'data', 'imagenes', _n + '.json')
+        if os.path.exists(_fi):
+            _e['imgs'] = json.load(open(_fi, encoding='utf-8')).get('imgs', []); break
 
 # slug: (marca, descriptor ES, descriptor EN, categoría)
 META = {
@@ -363,6 +373,8 @@ f.addEventListener('submit',function(e){{e.preventDefault();
 FOTO = '593a1fae-6199-48f6-b0f9-59a35c018a67_rw_1200.png?h=870e8eb6e5363c7d73488a4ac025154b'   # tu foto actual (Adobe); pon tu foto nueva en src/img/foto.jpg|png|webp
 SRC_IMG = os.path.join(AQUI, 'src', 'img')
 LOCALES = set(os.listdir(SRC_IMG)) if os.path.isdir(SRC_IMG) else set()
+LOCALES_PROY = {f'proyectos/{d}/{f}' for d in os.listdir(os.path.join(SRC_IMG, 'proyectos'))
+                for f in os.listdir(os.path.join(SRC_IMG, 'proyectos', d))} if os.path.isdir(os.path.join(SRC_IMG, 'proyectos')) else set()
 FOTO_LOCAL = next((f for f in ('foto.webp', 'foto.jpg', 'foto.jpeg', 'foto.png') if f in LOCALES), None)
 
 
@@ -392,13 +404,24 @@ def tarjeta(p, lang, aqui, n):
             f'<div class="meta"><span class="num" aria-hidden="true">{n:02d}</span><div><h3>{esc(marca)}</h3><p>{esc(desc)} · {esc(CATS[cat][0 if lang == "es" else 1])}</p></div></div></a></li>')
 
 
+def cover_img(e, alt, aqui):
+    """Portada de un proyecto de Behance en alta resolución: primero una portada propia (src/img/proyectos/<id>/cover.webp),
+    si no, la versión grande de Behance (808 px) con respaldo automático a la original (404 px)."""
+    loc = next((l for l in (f'proyectos/{e["id"]}/cover.webp', f'proyectos/{e["clave"]}/cover.webp') if l in LOCALES_PROY), None)
+    if loc: src, resp = rel(aqui, 'img/') + loc, ''
+    else:
+        orig = e['cover']; src = orig.replace('/projects/404/', '/projects/808/')
+        resp = f' onerror="this.onerror=null;this.src=\'{esc(orig)}\'"' if src != orig else ''
+    return f'<img src="{src}" alt="{esc(alt)}" width="640" height="480" loading=lazy decoding="async"{resp}>'
+
+
 def tarjeta_ext(e, lang, n, aqui):
     desc = e['des'] if lang == 'es' else e['den']
     cat = e.get('cat', 'branding')
     if e.get('imgs'): enlace = f'href="{rel(aqui, proy_ruta(e["slug"], lang))}"'
     else: enlace = f'href="{esc(e["link"])}" target="_blank" rel="noopener"'   # hasta tener las imágenes, abre Behance
     flecha = '' if e.get('imgs') else ' ↗'
-    return (f'<li data-cat="{cat}"><a class="tarjeta" {enlace}><div class="img"><img src="{esc(e["cover"])}" alt="{esc(e["marca"] + " — " + desc)}" width="640" height="480" loading=lazy decoding="async"></div>'
+    return (f'<li data-cat="{cat}"><a class="tarjeta" {enlace}><div class="img">{cover_img(e, e["marca"] + " — " + desc, aqui)}</div>'
             f'<div class="meta"><span class="num" aria-hidden="true">{n:02d}</span><div><h3>{esc(e["marca"])}</h3><p>{esc(desc)} · {esc(CATS[cat][0 if lang == "es" else 1])}{flecha}</p></div></div></a></li>')
 
 
@@ -600,7 +623,7 @@ def galeria(lang, aqui):
         desc = e['des'] if lang == 'es' else e['den']
         href = rel(aqui, proy_ruta(e['slug'], lang)) if e.get('imgs') else esc(e['link'])
         ext = '' if e.get('imgs') else ' target="_blank" rel="noopener"'
-        tarjetas.append(f'<a class="gcard" href="{href}"{ext}><div class="img"><img src="{esc(e["cover"])}" alt="{esc(e["marca"] + " — " + desc)}" width="640" height="480" loading=lazy decoding="async"></div>'
+        tarjetas.append(f'<a class="gcard" href="{href}"{ext}><div class="img">{cover_img(e, e["marca"] + " — " + desc, aqui)}</div>'
                         f'<div class="meta"><span class="num" aria-hidden="true">{len(tarjetas) + 1:02d}</span><div><h3>{esc(e["marca"])}</h3><p>{esc(desc)}</p></div></div></a>')
     for s in DESTACADOS:
         p = P[s]; marca, des, den, cat = META[s]; desc = des if lang == 'es' else den
