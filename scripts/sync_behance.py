@@ -3,7 +3,7 @@
 - Solo agrega proyectos posteriores a DESDE y que no estén ya en el sitio.
 - Nunca sobrescribe una entrada existente: puedes editar a mano marca, descripción y categoría.
 - Si Behance no responde, no hace nada y no rompe la publicación."""
-import json, os, re, subprocess, sys, unicodedata, urllib.request, xml.etree.ElementTree as ET
+import html, json, os, re, subprocess, sys, unicodedata, urllib.request, xml.etree.ElementTree as ET
 from email.utils import parsedate_to_datetime
 
 USUARIO = 'marianaboscan'
@@ -139,7 +139,7 @@ def main():
         if fecha and fecha < DESDE: continue
         im = re.search(r"src='([^']+)'", it.findtext('description') or '')
         if not im: continue
-        marca, desc = partir(it.findtext('title') or slug)
+        marca, desc = partir(html.unescape(html.unescape(it.findtext('title') or slug)))
         datos.append(dict(id=pid, marca=marca, des=a_es(desc), den=desc, cat=categoria(marca + ' ' + desc), cover=im.group(1), link=link, fecha=fecha))
         nuevos += 1; print('Nuevo proyecto:', marca, '|', desc)
     if nuevos:
