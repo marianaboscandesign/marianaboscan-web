@@ -37,6 +37,15 @@ def limpio(t):
         if u == t: break
         t = u
     return t
+def categorias_de(e):
+    """Un proyecto puede estar en varias categorías: la principal (cat) más las que mencione su título."""
+    if e.get('cats'): return list(e['cats'])
+    t = (e['marca'] + ' ' + e.get('den', '') + ' ' + e.get('des', '')).lower()
+    reglas = [('branding', r'brand|identity|identidad|logo|marca'), ('web', r'web|\bui\b|\bux\b|landing|shopify|sitio'),
+              ('social', r'social|redes'), ('packaging', r'packag|empaque'), ('editorial', r'editorial|report|informe|catalog|flyer'),
+              ('video', r'video|campaign|campa')]
+    cs = [e.get('cat', 'branding')] + [c for c, rx in reglas if re.search(rx, t)]
+    return list(dict.fromkeys(c for c in cs if c in CATS))
 for _e in NUEVOS:
     for _k in ('marca', 'des', 'den'): _e[_k] = limpio(_e.get(_k, ''))
     _m = re.search(r'/gallery/\d+/([^/?#]+)', _e['link'])
@@ -421,7 +430,7 @@ def tarjeta_ext(e, lang, n, aqui):
     if e.get('imgs'): enlace = f'href="{rel(aqui, proy_ruta(e["slug"], lang))}"'
     else: enlace = f'href="{esc(e["link"])}" target="_blank" rel="noopener"'   # hasta tener las imágenes, abre Behance
     flecha = '' if e.get('imgs') else ' ↗'
-    return (f'<li data-cat="{cat}"><a class="tarjeta" {enlace}><div class="img">{cover_img(e, e["marca"] + " — " + desc, aqui)}</div>'
+    return (f'<li data-cat="{" ".join(categorias_de(e))}"><a class="tarjeta" {enlace}><div class="img">{cover_img(e, e["marca"] + " — " + desc, aqui)}</div>'
             f'<div class="meta"><span class="num" aria-hidden="true">{n:02d}</span><div><h3>{esc(e["marca"])}</h3><p>{esc(desc)} · {esc(CATS[cat][0 if lang == "es" else 1])}{flecha}</p></div></div></a></li>')
 
 
@@ -821,14 +830,14 @@ FILTRO_JS = '''<script>
 (function(){var bs=document.querySelectorAll('.filtros button'),ul=document.querySelector('.rejilla'),lis=document.querySelectorAll('.rejilla li');
 bs.forEach(function(b){b.addEventListener('click',function(){var c=b.getAttribute('data-f');
 bs.forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});ul.classList.toggle('filtrada',c!=='todos');
-lis.forEach(function(li){li.hidden=!(c==='todos'||li.getAttribute('data-cat')===c)});});});})();
+lis.forEach(function(li){li.hidden=!(c==='todos'||(' '+li.getAttribute('data-cat')+' ').indexOf(' '+c+' ')>-1)});});});})();
 </script>'''
 
 
 def pagina_portafolio(lang):
     t = UI[lang]; aqui = ruta('portafolio', lang)
     usadas = []
-    for c in [META[p['s']][3] for p in D['proyectos']] + [e.get('cat', 'branding') for e in NUEVOS]:
+    for c in [META[p['s']][3] for p in D['proyectos']] + [c for e in NUEVOS for c in categorias_de(e)]:
         if c not in usadas: usadas.append(c)
     orden = [c for c in CATS if c in usadas]
     filtros = f'<button type="button" data-f="todos" aria-pressed="true">{esc(t["todos"])}</button>' + ''.join(
