@@ -925,7 +925,9 @@ def main():
     shutil.copy(os.path.join(AQUI, 'src', 'animar.js'), DIST)
     os.makedirs(os.path.join(DIST, 'cierre'), exist_ok=True)
     shutil.copy(os.path.join(AQUI, 'src', 'cierre.html'), os.path.join(DIST, 'cierre', 'index.html'))
-    shutil.copytree(os.path.join(AQUI, 'src', 'cv'), os.path.join(DIST, 'cv-mariana-hkxmcj9e'))   # CV con enlace privado: sin enlaces desde el sitio, fuera del sitemap y noindex   # cierre reutilizable para Behance (noindex, fuera del sitemap)
+    shutil.copytree(os.path.join(AQUI, 'src', 'cv'), os.path.join(DIST, 'cv-mariana-boscan'))   # CV: sin enlaces desde el sitio, fuera del sitemap y noindex
+    os.makedirs(os.path.join(DIST, 'cv-mariana-hkxmcj9e'), exist_ok=True)   # enlace anterior: redirige al nuevo
+    open(os.path.join(DIST, 'cv-mariana-hkxmcj9e', 'index.html'), 'w').write('<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><title>CV</title><meta http-equiv="refresh" content="0; url=../cv-mariana-boscan/"><a href="../cv-mariana-boscan/">CV</a>')
     if os.path.isdir(SRC_IMG): shutil.copytree(SRC_IMG, os.path.join(DIST, 'img'))
     descargador()
     urls = []
