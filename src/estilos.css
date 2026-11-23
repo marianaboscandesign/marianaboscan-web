@@ -1084,3 +1084,9 @@ body.interna #contacto{padding-bottom:var(--sec)}
  .arco-escena{height:100%}
 }
 @media(min-width:900px){body.inicio-pg main>section.arco{padding-block:0}}
+
+/* titular del banner: "diseño con intención." siempre en una sola línea (escritorio) */
+@media(min-width:900px){
+ .hc-h1{font-size:clamp(40px,5.2vw,92px)}
+ .hc-h1 .ln{white-space:nowrap;display:inline-block}
+}
