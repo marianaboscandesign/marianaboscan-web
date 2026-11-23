@@ -100,8 +100,8 @@
     if (barra && hc) barra.classList.toggle('solido', hc.getBoundingClientRect().bottom < 110);
     if (arco && matchMedia('(min-width: 900px)').matches && !reducido) {
       var r = arco.getBoundingClientRect();
-      var p = Math.max(0, Math.min(1, (0.8 * innerHeight - r.top) / (0.6 * innerHeight + r.height)));
-      var k = k0 + p * (cards.length - 1 - 2 * k0);
+      var p = Math.max(0, Math.min(1, -r.top / Math.max(1, r.height - innerHeight)));
+      var k = k0 + p * (cards.length - 1 - 1 - k0);
       arco.style.setProperty('--rot', (-k * paso).toFixed(2) + 'deg'); pinta(k);
     }
   }

@@ -1074,3 +1074,13 @@ body.interna #contacto{padding-bottom:var(--sec)}
 .cab-int .btn.primario .chip{background:#fffaf4;color:#14141e}
 .cab-int .btn:not(.primario){background:#fff;border:1px solid rgba(20,20,30,.16);color:#14141e}
 .cab-int .btn:not(.primario):hover{background:#14141e;color:#fff}
+
+/* ---------- ronda 11: portafolio fijo mientras giran las tarjetas + sin bordes en las portadas ---------- */
+.tarj .foto{background:transparent}
+.tarj .foto img{object-fit:cover;background:none}
+@media(min-width:900px){
+ .arco{--top0:clamp(104px,15svh,150px);height:calc(100svh + (var(--n) - 6)*20vh)}
+ .arco-pin{position:sticky;top:0;height:100svh}
+ .arco-escena{height:100%}
+}
+@media(min-width:900px){body.inicio-pg main>section.arco{padding-block:0}}
