@@ -1091,4 +1091,4 @@ body.interna #contacto{padding-bottom:var(--sec)}
  .hc-h1 .ln{white-space:nowrap;display:inline-block}
 }
 /* "intención." alineada en la línea base con el resto del titular */
-.hc-h1 .serif{position:relative;top:-.026em}
+.hc-h1 .w{display:inline-flex;vertical-align:baseline}
