@@ -197,6 +197,7 @@ def ico(nombre):
      'maleta': '<rect x="3" y="7.5" width="18" height="12" rx="3"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5M3 13h18"/>',
      'capas': '<path d="m12 3.5 9 4.8-9 4.8-9-4.8z"/><path d="m3 12.5 9 4.8 9-4.8M3 16.8l9 4.7 9-4.7"/>',
      'flecha': '<path d="M5 12h14M13 6l6 6-6 6"/>',
+     'estrella': '<path d="M12 3c.8 5 2.2 7.2 9 9-6.8 1.8-8.2 4-9 9-.8-5-2.2-7.2-9-9 6.8-1.8 8.2-4 9-9z"/>',
     }[nombre]
     return f'<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">{d}</svg>'
 
@@ -459,11 +460,11 @@ def pagina_proyecto_ext(e, lang):
         if len(m) > 2 and m[2] and piezas: piezas[-1].append(img)
         else: piezas.append([img])
     piezas = [f'<div class="serie">{"".join(g)}</div>' for g in piezas]
-    cuerpo = f'''<section class="cab-pagina wrap" style="padding-bottom:var(--e8)"><h1 style="font-size:clamp(40px,7vw,80px)">{esc(e['marca'])}</h1><p class="lead">{esc(desc)}</p></section>
-<section class="wrap"><div class="pila">{''.join(piezas)}</div>
-<div class="pager"><a class="btn" href="{rel(aqui, ruta('portafolio', lang))}">{esc(t['volver'])}</a><a class="btn" href="{esc(e['link'])}" target="_blank" rel="noopener">{esc(t['ver_behance'])} ↗</a></div></section>'''
+    cuerpo = cab_int(CATS[e.get('cat', 'branding')][0 if lang == 'es' else 1], esc(e['marca']), esc(desc)) + f'''
+<section class="wrap pila-int"><div class="pila">{''.join(piezas)}</div>
+<div class="pager"><a class="btn" href="{rel(aqui, ruta('portafolio', lang))}">← {esc(t['volver'])}</a><a class="btn" href="{esc(e['link'])}" target="_blank" rel="noopener">{esc(t['ver_behance'])} ↗</a></div></section>''' + cta_interna(lang, aqui)
     otra = proy_ruta(e['slug'], 'en' if lang == 'es' else 'es')
-    return pagina(lang, aqui, 'portafolio', f"{e['marca']} — {desc} | Mariana Boscán", f"{e['marca']}: {desc}. {t['desc_sitio']}"[:250], cuerpo, otra, og_img=e['imgs'][0][0] if e['imgs'][0][0].startswith('http') else SITIO + '/img/' + e['imgs'][0][0])
+    return pagina(lang, aqui, 'portafolio', f"{e['marca']} — {desc} | Mariana Boscán", f"{e['marca']}: {desc}. {t['desc_sitio']}"[:250], cuerpo, otra, og_img=e['imgs'][0][0] if e['imgs'][0][0].startswith('http') else SITIO + '/img/' + e['imgs'][0][0], extra_body=INT_JS(aqui), body_class='interna')
 
 
 ICONO_SOL = '<svg class="i-sol" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>'
@@ -471,14 +472,9 @@ ICONO_LUNA = '<svg class="i-luna" viewBox="0 0 24 24" aria-hidden="true"><path d
 ICONO_GLOBO = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.8 5.5 3.8 9S14.5 18.5 12 21c-2.5-2.5-3.8-5.5-3.8-9S9.5 5.5 12 3z"/></svg>'
 ICONO_CHEV = '<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>'
 
-TEMA_HEAD = '<script>try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>'
+TEMA_HEAD = ''
 TEMA_JS = '''<script>
-(function(){var r=document.documentElement,b=document.getElementById('tema');if(!b)return;
-function oscuro(){var t=r.getAttribute('data-theme');return t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches}
-function pinta(){b.setAttribute('aria-pressed',oscuro()?'true':'false')}
-b.addEventListener('click',function(){var n=oscuro()?'light':'dark';r.setAttribute('data-theme',n);try{localStorage.setItem('tema',n)}catch(e){}pinta()});pinta();
-var d=document.querySelector('details.idioma');if(d){document.addEventListener('click',function(e){if(!d.contains(e.target))d.removeAttribute('open')});document.addEventListener('keydown',function(e){if(e.key==='Escape')d.removeAttribute('open')})}
-})();
+(function(){var d=document.querySelector('details.idioma');if(d){document.addEventListener('click',function(e){if(!d.contains(e.target))d.removeAttribute('open')});document.addEventListener('keydown',function(e){if(e.key==='Escape')d.removeAttribute('open')})}})();
 </script>'''
 
 
@@ -489,20 +485,24 @@ def cabecera(lang, aqui, clave, otra_ruta):
     a = rel(aqui, 'assets/')
     otro = 'en' if lang == 'es' else 'es'
     home = ruta('inicio', lang)
-    nav = ''.join(f'<a href="{rel(aqui, ruta(k, lang))}"{" aria-current=page" if k == clave else ""}>{esc(v)}</a>' for k, v in t['nav'].items() if MOSTRAR_SERVICIOS or k != 'servicios')
+    hc0 = HC[lang]
+    base = '' if clave == 'inicio' else rel(aqui, ruta('inicio', lang))
+    entradas = [('portafolio', 'proyectos', t['nav']['portafolio']), ('sobre', 'sobre', t['nav']['sobre']), ('experiencia', 'experiencia', hc0['nav_exp']), ('contacto', 'contacto', t['nav']['contacto'])]
+    nav = ''.join(f'<a href="{base}#{anc}"{" aria-current=page" if (k == clave and clave != "inicio") else ""}>{esc(v)}</a>' for k, anc, v in entradas)
     nombres = {'es': 'Español', 'en': 'English'}
     items = ''.join(
         f'<li><a href="{rel(aqui, otra_ruta) if l != lang else "#"}" hreflang="{l}" lang="{l}"{" aria-current=true" if l == lang else ""}>{nombres[l]}<small>{l.upper()}</small></a></li>'
         for l in ('es', 'en'))
+    hc = HC[lang]
     return f'''<a class="skip" href="#contenido">{esc(t['skip'])}</a>
-<div class="barra"><header class="wrap top">
+<div class="barra{' foto' if clave == 'inicio' else ''}"><header class="wrap top">
   <a class="logo" href="{rel(aqui, ruta('inicio', lang))}" aria-label="Mariana Boscán">
     <img class="l-claro" src="{a}mariana-boscan-logo-tinta.svg" alt="Mariana Boscán" width="160" height="46">
     <img class="l-oscuro" src="{a}mariana-boscan-logo-blanco-degradado.svg" alt="" width="160" height="46"></a>
   <nav class="nav" aria-label="{esc(t['menu'])}">{nav}</nav>
   <div class="ctl">
+    <a class="btn primario cta-nav" href="{base}#contacto"><span>{esc(hc['nav_cta'])}</span><i class="chip">{ico('flecha')}</i></a>
     <details class="idioma"><summary aria-label="{esc(t['idioma_aria'])}">{ICONO_GLOBO}<span>{nombres[lang]}</span>{ICONO_CHEV}</summary><ul>{items}</ul></details>
-    <button type="button" class="tema" id="tema" aria-pressed="false" aria-label="{esc(t['tema_aria'])}" title="{esc(t['tema_aria'])}">{ICONO_SOL}{ICONO_LUNA}</button>
   </div>
 </header></div>'''
 
@@ -522,7 +522,7 @@ def pagina(lang, aqui, clave, titulo, desc, cuerpo, otra_ruta, og_img=None, extr
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light dark">
+<meta name="color-scheme" content="light">
 <title>{esc(titulo)}</title>
 <meta name="description" content="{esc(desc)}">
 <link rel="canonical" href="{canon}">
@@ -545,6 +545,7 @@ def pagina(lang, aqui, clave, titulo, desc, cuerpo, otra_ruta, og_img=None, extr
 {cuerpo}
 </main>
 {pie(lang, aqui)}
+{fab(lang)}
 {TEMA_JS}
 {extra_body}</body>
 </html>
@@ -643,7 +644,120 @@ CARTAS = {  # (lado, fila, título, subtítulo, icono): una carta por servicio, 
 MOSTRAR_CARTAS = False  # pon True para volver a mostrar las cards alrededor de la foto
 
 
+HERO_ESTILO = os.environ.get('HERO_ESTILO', 'cine')   # 'figma' = interfaz de Figma · 'cine' = foto a pantalla completa estilo cine · 'clasico' = hero anterior
+
+HF = {
+ 'es': dict(archivo='Mariana Boscán — Portafolio', borrador='Borrador', compartir='Conectemos', paginas='Páginas', capas='Capas', diseno='Diseño', prototipo='Prototipo',
+            pags=('inicio', 'portafolio', 'sobre', 'contacto'), cap=('Portafolio', 'Hero', 'Titular', 'Subtítulo', 'Retrato', 'Botón'),
+            props=[('Cargo', 'Design Team Lead'), ('Experiencia', '8+ años'), ('Enfoque', 'Branding · Web · UI'), ('Ubicación', 'Bogotá · Remoto')],
+            estado='Abierta a roles remotos', color='Color', tipo='Tipografía', tu='Tú', pin_t='Mariana', pin_p='¡Hola! Abierta a roles remotos con equipos de EE. UU.', marco='Hero · 1440 × 900'),
+ 'en': dict(archivo='Mariana Boscán — Portfolio', borrador='Draft', compartir='Let’s connect', paginas='Pages', capas='Layers', diseno='Design', prototipo='Prototype',
+            pags=('inicio', 'portafolio', 'sobre', 'contacto'), cap=('Portfolio', 'Hero', 'Headline', 'Subtitle', 'Portrait', 'Button'),
+            props=[('Role', 'Design Team Lead'), ('Experience', '8+ years'), ('Focus', 'Branding · Web · UI'), ('Location', 'Bogotá · Remote')],
+            estado='Open to remote roles', color='Color', tipo='Typography', tu='You', pin_t='Mariana', pin_p='Hi! Open to remote roles with US teams.', marco='Hero · 1440 × 900'),
+}
+_I = lambda d: f'<svg viewBox="0 0 16 16" aria-hidden="true">{d}</svg>'
+HF_ICO = {
+ 'mover': _I('<path d="M3 2l9 4-4 1.500L6.500 12z"/>'), 'marco': _I('<path d="M5 1.500v13M11 1.500v13M1.500 5h13M1.500 11h13"/>'),
+ 'forma': _I('<rect x="2.500" y="2.500" width="11" height="11" rx="1"/>'), 'pluma': _I('<path d="M2.500 13.500l1-4 6-6 3 3-6 6zM8.500 4.500l3 3"/>'),
+ 'texto': _I('<path d="M3 4V2.500h10V4M8 2.500v11M6 13.500h4"/>'), 'coment': _I('<path d="M2.500 3h11v8h-6l-3 2.500V11h-2z"/>'),
+ 'hash': _I('<path d="M5 1.500v13M11 1.500v13M1.500 5h13M1.500 11h13"/>'), 'pagina': _I('<path d="M3.500 1.500h6l3 3v10h-9z"/>'),
+}
+
+
+def _palabras(texto, n0, serif=False):
+    out = []; n = n0
+    for w in texto.split():
+        cls = ' class="serif"' if serif else ''
+        out.append(f'<span class="w"><span style="--i:{n}"{cls}>{esc(w)}</span></span>'); n += 1
+    return ' '.join(out), n
+
+
+def hero_figma(lang, aqui):
+    t = UI[lang]; h = HF[lang]
+    a, n = _palabras(t['h1_a'], 0)
+    b, n = _palabras(t['h1_b_pre'].strip(), n)
+    c, n = _palabras(t['h1_b_serif'] + t['h1_b_post'], n, serif=True)
+    h1 = f'{a}<br>{b} {c}'
+    pag = {k: UI[lang]['nav'][k] for k in h['pags']}
+    pags = ''.join(f'<li><a href="{rel(aqui, ruta(k, lang))}"{" aria-current=page" if k == "inicio" else ""}>{HF_ICO["pagina"]}{esc(v)}</a></li>' for k, v in pag.items())
+    cap = h['cap']
+    capas = (f'<li style="--k:0">{HF_ICO["hash"]}{esc(cap[0])}</li><li class="n1" style="--k:1">{HF_ICO["marco"]}{esc(cap[1])}</li>'
+             f'<li class="n2 h" style="--k:2;--w:1.5s">{HF_ICO["texto"]}{esc(cap[2])}</li><li class="n2" style="--k:3">{HF_ICO["texto"]}{esc(cap[3])}</li>'
+             f'<li class="n2 h" style="--k:4;--w:3.3s">{HF_ICO["forma"]}{esc(cap[4])}</li><li class="n2 h" style="--k:5;--w:5.3s">{HF_ICO["forma"]}{esc(cap[5])}</li>')
+    props = ''.join(f'<div style="animation-delay:{1.1 + i * .12:.2f}s"><dt>{esc(k)}</dt><dd>{esc(v)}</dd></div>' for i, (k, v) in enumerate(h['props']))
+    cursor = '<svg viewBox="0 0 18 20" aria-hidden="true"><path d="M1 1l5.500 15 2.200-6.200L15 7.600z"/></svg>'
+    return f'''<section class="hf" id="inicio" data-nombre="{esc(t['secciones'][0])}" data-nav="inicio">
+<div class="hf-barra" aria-hidden="true"><span class="t on">{HF_ICO['mover']}</span><span class="t">{HF_ICO['marco']}</span><span class="t">{HF_ICO['forma']}</span><span class="t">{HF_ICO['pluma']}</span><span class="t">{HF_ICO['texto']}</span><span class="t">{HF_ICO['coment']}</span><span class="sep"></span><span class="arch">{esc(h['archivo'])}<small>{esc(h['borrador'])}</small></span><span class="sep"></span><a class="comp" href="{rel(aqui, ruta('contacto', lang))}" tabindex="-1">{esc(h['compartir'])}</a></div>
+<div class="hf-layout">
+<aside class="hf-panel i" aria-hidden="true"><div class="hf-ph">{esc(h['paginas'])}</div><div class="hf-sec"><ul class="hf-pag">{pags}</ul></div><div class="hf-ph" style="border-top:1px solid var(--hf-borde)">{esc(h['capas'])}</div><div class="hf-sec"><ul class="hf-cap">{capas}</ul></div></aside>
+<div class="hf-escena"><p class="hf-titulo">{HF_ICO['hash']}{esc(h['marco'])}</p>
+<div class="hf-frame"><div class="hf-texto">
+<div class="hf-envuelve"><h1 class="hf-h1">{h1}</h1><i class="hf-sel h" aria-hidden="true"><b></b><b></b><b></b><b></b><em>—</em></i></div>
+<p class="hf-sub">{esc(t['hero_sub'])}</p>
+<div class="btns"><span class="hf-btnwrap"><a class="btn primario" href="{rel(aqui, ruta('contacto', lang))}">{esc(t['hero_cta'])} {ico('flecha')}</a><i class="hf-sel b" aria-hidden="true"><b></b><b></b><b></b><b></b></i></span><a class="btn" href="{rel(aqui, ruta('portafolio', lang))}">{esc(t['ver_portafolio'])}</a></div></div>
+<div class="hf-retrato">{img_escena(aqui, HERO_LOCAL, t['foto_alt'], attrs='fetchpriority="high"')}<i class="hf-sel p" aria-hidden="true"><b></b><b></b><b></b><b></b><em>—</em></i></div></div>
+<div class="hf-cursor m" aria-hidden="true">{cursor}<span>{esc(h['pin_t'])}</span></div><div class="hf-cursor r" aria-hidden="true">{cursor}<span>{esc(h['tu'])}</span></div>
+<div class="hf-pin" aria-hidden="true"><i>MB</i><p><b>{esc(h['pin_t'])}</b>{esc(h['pin_p'])}</p></div></div>
+<aside class="hf-panel d" aria-hidden="true"><div class="hf-ph"><span class="tabs"><span class="a">{esc(h['diseno'])}</span><span>{esc(h['prototipo'])}</span></span><span>100%</span></div>
+<div class="hf-sec"><dl class="hf-prop">{props}<div style="animation-delay:1.6s"><dt>Status</dt><dd class="hf-estado">{esc(h['estado'])}</dd></div></dl></div>
+<div class="hf-sec"><h2>{esc(h['color'])}</h2><div class="hf-col"><span><i style="background:#afb5e7"></i>AFB5E7</span><span><i style="background:#ffbfef"></i>FFBFEF</span><span><i style="background:#14141e"></i>14141E</span></div></div>
+<div class="hf-sec"><h2>{esc(h['tipo'])}</h2><div class="hf-tipo"><b>Aa</b><b class="s">Aa</b><small>DM Sans · Fraunces</small></div></div></aside>
+</div>
+<script>(function(){{var s=document.currentScript.parentNode;if(!s)return;
+function m(e){{var r=s.getBoundingClientRect();s.style.setProperty('--mx',((e.clientX-r.left)/r.width-.5).toFixed(3));s.style.setProperty('--my',((e.clientY-r.top)/r.height-.5).toFixed(3))}}
+if(!matchMedia('(prefers-reduced-motion:reduce)').matches&&matchMedia('(hover:hover)').matches)s.addEventListener('pointermove',m,{{passive:true}});
+function z(){{s.querySelectorAll('.hf-sel em').forEach(function(e){{var p=e.parentNode.parentNode;e.textContent=Math.round(p.offsetWidth)+' × '+Math.round(p.offsetHeight)}})}}
+z();addEventListener('resize',z);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(z)}})();</script>
+</section>'''
+
+
+HC = {
+ 'es': dict(anuncio='Abierta a roles remotos con equipos de EE. UU. · Design Team Lead en Partner in Publishing', anuncio_cta='Escríbeme', nav_exp='Experiencia', et_exp='Experiencia', exp_titulo='Dónde he trabajado', exp_ver='Ver experiencia completa', actual='Actual', fab='Contáctame', fab_t='Abrir opciones de contacto', fab_items=('Escríbeme por correo', 'WhatsApp', 'LinkedIn'), et_obra='Portafolio', et_sobre='Sobre mí', et_contacto='Contacto', stats=[('8+', 'Años de experiencia'), ('5', 'Empresas y agencias'), ('{n}', 'Proyectos en el portafolio'), ('ES · EN', 'Español nativo · Inglés conversacional')], nav_cta='Conectemos', etiqueta='Design Team Lead · Diseñadora gráfica senior',
+         ahora='Ahora mismo', ahora_t='Liderando el equipo de diseño de una agencia de EE. UU.', chips=['Branding', 'Web', 'UI', 'Design systems', 'Accesibilidad'], cita='“Diseño con estrategia, con foco en el detalle.”',
+         titulo='Design Team Lead · Diseñadora gráfica senior', anio='Portafolio', caps=['8+ años de experiencia', 'Branding · Web · UI · Design systems', 'Bogotá · Remoto'], estado='Abierta a roles remotos', scroll='Desliza'),
+ 'en': dict(anuncio='Open to remote roles with US teams · Design Team Lead at Partner in Publishing', anuncio_cta='Get in touch', nav_exp='Experience', et_exp='Experience', exp_titulo='Where I’ve worked', exp_ver='View full experience', actual='Current', fab='Let’s talk', fab_t='Open contact options', fab_items=('Email me', 'WhatsApp', 'LinkedIn'), et_obra='Portfolio', et_sobre='About', et_contacto='Contact', stats=[('8+', 'Years of experience'), ('5', 'Companies & agencies'), ('{n}', 'Projects in the portfolio'), ('ES · EN', 'Spanish native · English conversational')], nav_cta='Let’s connect', etiqueta='Design Team Lead · Senior Graphic Designer',
+         ahora='Right now', ahora_t='Leading the design team at a US-based agency', chips=['Branding', 'Web', 'UI', 'Design systems', 'Accessibility'], cita='“Strategic design, obsessed with the details.”',
+         titulo='Design Team Lead · Senior Graphic Designer', anio='Portfolio', caps=['8+ years of experience', 'Branding · Web · UI · Design systems', 'Bogotá · Remote'], estado='Open to remote roles', scroll='Scroll'),
+}
+
+
+def hero_cine(lang, aqui):
+    t = UI[lang]; h = HC[lang]
+    a, n = _palabras(t['h1_a'], 0)
+    b, n = _palabras(t['h1_b_pre'].strip(), n)
+    c, n = _palabras(t['h1_b_serif'] + t['h1_b_post'], n, serif=True)
+    src = rel(aqui, 'img/') + 'hero-cine.webp'
+    chips = ''.join(f'<span>{esc(x)}</span>' for x in h['chips'])
+    ic = lambda d: f'<svg viewBox="0 0 20 20" aria-hidden="true">{d}</svg>'
+    car = '<i class="car" aria-hidden="true"></i>'
+    barra = (f'<div class="hc-fig" aria-hidden="true">'
+        f'<span class="t on a1">{ic("<path d=\'M4.500 3l11 5-4.700 1.800L8.800 15z\' fill=\'currentColor\'/>")}</span>{car}'
+        f'<span class="t a2">{ic("<path d=\'M7 3v14M13 3v14M3 7h14M3 13h14\'/>")}</span>{car}'
+        f'<span class="t">{ic("<rect x=\'3.500\' y=\'3.500\' width=\'13\' height=\'13\' rx=\'1.500\'/>")}</span>{car}'
+        f'<span class="t a3">{ic("<circle cx=\'10\' cy=\'8\' r=\'3.200\'/><path d=\'M3 17l4.500-5M12 13.500l5 3.500\'/>")}</span>{car}'
+        f'<span class="t a4">{ic("<path d=\'M4 5V3.500h12V5M10 3.500v13M8 16.500h4\'/>")}</span>'
+        f'<span class="t a5">{ic("<path d=\'M3.500 4h13v9h-7l-3.500 3v-3h-2.500z\'/>")}</span>'
+        f'<span class="t">{ic("<path d=\'M4 4h4.500v4.500H4zM11.500 4H16v4.500h-4.500zM4 11.500h4.500V16H4zM11.500 13.700l2.300-2.300 2.300 2.300-2.300 2.300z\'/>")}</span>'
+        f'<span class="sep"></span><span class="g"><span class="t">{ic("<path d=\'M4 15c2-6 4-9 6-9s1 5 3 5 2-3 3-3\'/>")}</span><span class="t on2">{ic("<rect x=\'3.500\' y=\'3.500\' width=\'13\' height=\'13\' rx=\'2\'/><path d=\'M7 13l2-4 2 2 2-3\'/>")}</span><span class="t">{ic("<path d=\'M7.500 6L3.500 10l4 4M12.500 6l4 4-4 4\'/>")}</span></span></div>')
+    return f'''<section class="hc" id="inicio" data-nombre="{esc(t['secciones'][0])}" data-nav="inicio">
+<div class="hc-bg"><div class="hc-par"><img class="hc-img" src="{src}" alt="{esc(t['foto_alt'])}" fetchpriority="high">
+<div class="hc-str l" aria-hidden="true"><img src="{src}" alt=""></div></div></div>
+<div class="hc-vel" aria-hidden="true"></div><div class="hc-grano" aria-hidden="true"></div>
+<div class="hc-bar t" aria-hidden="true"></div><div class="hc-bar b" aria-hidden="true"></div>
+<div class="hc-in"><div class="hc-texto"><p class="etiqueta hc-et">{ico('estrella')}<span>{esc(h['etiqueta'])}</span></p>
+<h1 class="hc-h1">{a}<br>{b} {c}</h1>
+<p class="hc-sub">{esc(t['hero_sub'])}</p>
+<div class="btns"><a class="btn blanco" href="#contacto"><span>{esc(t['hero_cta'])}</span><i class="chip">{ico('flecha')}</i></a><a class="btn hc-ghost" href="#proyectos"><span>{esc(t['ver_portafolio'])}</span><i class="chip">{ico('flecha')}</i></a></div></div>
+<aside class="hc-vidrio"><i class="hv-ic">{ico('estrella')}</i><p class="hv-q">{esc(' '.join(x for x, _ in t['enunciado']))}</p><p class="hv-f">Mariana Boscán</p></aside></div>
+<script>(function(){{var s=document.currentScript.parentNode;if(matchMedia('(prefers-reduced-motion:reduce)').matches||!matchMedia('(hover:hover)').matches)return;
+s.addEventListener('pointermove',function(e){{var r=s.getBoundingClientRect();s.style.setProperty('--mx',((e.clientX-r.left)/r.width-.5).toFixed(3));s.style.setProperty('--my',((e.clientY-r.top)/r.height-.5).toFixed(3))}},{{passive:true}})}})();</script>
+</section>'''
+
+
 def hero2(lang, aqui):
+    if HERO_ESTILO == 'figma': return hero_figma(lang, aqui)
+    if HERO_ESTILO == 'cine': return hero_cine(lang, aqui)
     t = UI[lang]
     cartas = '' if not MOSTRAR_CARTAS else ''.join(f'<div class="carta {"izq" if lado == "i" else "der"} f{fila}" style="--i:{n}"><span class="vi">{ico2(ic)}</span><b>{esc(ti)}</b><small>{esc(sub)}</small></div>'
                      for n, (lado, fila, ti, sub, ic) in enumerate(CARTAS[lang]))
@@ -669,6 +783,28 @@ def enunciado(lang):
 
 
 def galeria(lang, aqui):
+    t = UI[lang]; h = HC[lang]
+    items = []
+    for e in NUEVOS:
+        desc = e['des'] if lang == 'es' else e['den']
+        href = rel(aqui, proy_ruta(e['slug'], lang)) if e.get('imgs') else e['link']
+        items.append((href, not e.get('imgs'), cover_img(e, e['marca'] + ' — ' + desc, aqui), e['marca'], desc))
+    P = {p['s']: p for p in D['proyectos']}
+    for p in D['proyectos']:
+        marca, des, den, cat = META[p['s']]; desc = des if lang == 'es' else den
+        items.append((rel(aqui, proy_ruta(p['s'], lang)), False, img_portada(p, marca + ' — ' + desc, aqui), marca, desc))
+    k0 = 3
+    lis = ''.join(f'<li class="tarj" style="--i:{i}"><div class="caja" style="--d:{i * .06:.2f}s"><a href="{esc(hr)}"{" target=_blank rel=noopener" if ext else ""} data-nom="{esc(m)}" data-desc="{esc(d)}"><span class="foto">{im}</span></a></div></li>'
+                  for i, (hr, ext, im, m, d) in enumerate(items))
+    h0 = items[k0]
+    return f'''<section class="arco" id="proyectos" data-nombre="{esc(t['secciones'][2])}" data-nav="portafolio" data-paso="15.5" data-k0="{k0}" style="--n:{len(items)}"><div class="arco-pin"><div class="arco-escena">
+<div class="arco-anillo" aria-hidden="true"></div><ul class="arco-rueda">{lis}</ul>
+<div class="arco-centro"><p class="etiqueta">{ico('estrella')}<span>{esc(h['et_obra'])}</span></p><h2>{esc(t['galeria_h'])}</h2><p class="arco-sub">{esc(t['port_lead'])}</p>
+<a class="arco-act" href="{esc(h0[0])}"><span class="n">{k0 + 1:02d}</span><span class="m">{esc(h0[3])}</span><span class="d">{esc(h0[4])}</span></a>
+<div class="btns"><a class="btn primario" href="{rel(aqui, ruta('portafolio', lang))}"><span>{esc(t['galeria_ver'])}</span><i class="chip">{ico('flecha')}</i></a></div></div></div></div></section>'''
+
+
+def galeria_clasica(lang, aqui):
     t = UI[lang]
     P = {p['s']: p for p in D['proyectos']}
     tarjetas = []
@@ -683,7 +819,7 @@ def galeria(lang, aqui):
         tarjetas.append(f'<a class="gcard" href="{rel(aqui, proy_ruta(s, lang))}"><div class="img">{img_portada(p, marca + " — " + desc, aqui)}</div>'
                         f'<div class="meta"><span class="num" aria-hidden="true">{len(tarjetas) + 1:02d}</span><div><h3>{esc(marca)}</h3><p>{esc(desc)}</p></div></div></a>')
     tarjetas.append(f'<a class="gcard final" href="{rel(aqui, ruta("portafolio", lang))}"><span>{esc(t["galeria_ver"])}</span>{ico("flecha")}</a>')
-    return f'''<section class="galeria" id="proyectos" data-nombre="{esc(t['secciones'][2])}" data-nav="portafolio" style="--n:{len(tarjetas)}"><div class="pin"><h2 class="gtitulo">{esc(t['galeria_h'])}</h2><div class="pista">{''.join(tarjetas)}</div></div></section>'''
+    return f'''<section class="galeria" id="proyectos" data-nombre="{esc(t['secciones'][2])}" data-nav="portafolio" style="--n:{len(tarjetas)}"><div class="pin"><div class="gtitulo"><p class="etiqueta">{ico('estrella')}<span>{esc(HC[lang]['et_obra'])}</span></p><h2>{esc(t['galeria_h'])}</h2></div><div class="pista">{''.join(tarjetas)}</div></div></section>'''
 
 
 def cine(lang, aqui, tag='h2'):
@@ -695,12 +831,19 @@ def cine(lang, aqui, tag='h2'):
 </section>'''
 
 
+HC['es'].update(cv='Descargar CV', cv_t='Descargar mi CV en PDF', sobre_f=[('capas', 'Marca y digital', 'Identidades, sitios web, tiendas online y landing pages coherentes entre canales.'), ('birrete', 'Diseño accesible', 'Contraste, legibilidad y claridad para que cualquier persona pueda usarlo.'), ('estrella', 'Diseño + IA', 'Exploro cómo la tecnología amplía la forma en que creamos.')])
+HC['en'].update(cv='Download CV', cv_t='Download my CV as a PDF', sobre_f=[('capas', 'Brand and digital', 'Identities, websites, online stores and landing pages that stay consistent across channels.'), ('birrete', 'Accessible design', 'Contrast, legibility and clarity so anyone can read and use it.'), ('estrella', 'Design + AI', 'Exploring how technology expands the way we create.')])
+CV_PDF = 'cv-mariana-boscan/Mariana-Boscan-CV.pdf'
+
+
 def bio(lang, aqui):
-    t = UI[lang]
+    t = UI[lang]; h = HC[lang]
     ps = ''.join(f'<p>{esc(x)}</p>' for x in t['sobre_p'])
-    ds = ''.join(f'<li>{ico(ic)}<div><strong>{esc(k)}</strong>{esc(v)}</div></li>' for (k, v), ic in zip(t['datos'], ('pin', 'birrete', 'maleta', 'capas')))
-    return f'''<section class="pantalla fondo-suave" id="bio" data-nombre="Bio" data-nav="sobre"><div class="wrap"><div class="dos"><div class="sobre rev"><h2 style="margin-bottom:var(--e6)">{h1_html(t['sobre_h1'])}</h2>{ps}</div>
-<div class="panel rev" style="--d:.15s;align-self:center"><ul class="datos">{ds}</ul></div></div></div></section>'''
+    ds = ''.join(f'<li><strong>{esc(k)}</strong>{esc(v)}</li>' for (k, v) in (t['datos'][0], t['datos'][2]))
+    return f'''<section class="pantalla fondo-suave" id="sobre" data-nombre="{esc(t['secciones'][3])}" data-nav="sobre"><div class="wrap"><div class="sobre-v">
+<figure class="sobre-foto rev"><img src="{rel(aqui, 'img/')}sobre-retrato.webp" alt="{esc(t['foto_alt'])}" loading="lazy" width="1190" height="1322"></figure>
+<div class="sobre rev" style="--d:.12s"><p class="etiqueta">{ico('estrella')}<span>{esc(h['et_sobre'])}</span></p><h2>{h1_html(t['sobre_h1'])}</h2>{ps}
+<p class="btns"><a class="btn primario" href="{rel(aqui, CV_PDF)}" download aria-label="{esc(h['cv_t'])}"><span>{esc(h['cv'])}</span><i class="chip">{ico('flecha')}</i></a></p></div></div></div></section>'''
 
 
 def experiencia(lang):
@@ -716,10 +859,14 @@ def formacion(lang, aqui):
     u, g_es, g_en, lugar, anio = EDUCACION
     ra = rel(aqui, 'assets/herramientas/')
     herr = ''.join(f'<div class="grupo-h"><h3>{esc(g_en_ if en else g_es_)}</h3><ul class="apps">' + ''.join(f'<li><img class="ic-n" src="{ra}{f}.png" alt="" width="56" height="56" loading="lazy"><img class="ic-b" src="{ra}{f}-claro.png" alt="" width="56" height="56" loading="lazy"><span>{esc(n)}</span></li>' for n, f in its) + '</ul></div>' for g_es_, g_en_, its in HERRAMIENTAS)
-    hab = ''.join(f'<li>{esc(h)}</li>' for h in HABILIDADES[lang])
-    return f'''<section class="pantalla fondo-suave" id="formacion" data-nombre="{esc(t['edu_h'])}" data-nav="sobre"><div class="wrap"><div class="dos"><div class="rev"><h2 style="margin-bottom:var(--e6)">{esc(t['edu_h'])}</h2><div class="panel"><h3>{esc(g_en if en else g_es)}</h3><p class="emp">{esc(u)}</p><p class="nota">{esc(lugar)} · {anio}</p></div>
-<h2 class="h-sec">{esc(t['skills_h'])}</h2><ul class="pildoras">{hab}</ul></div>
-<div class="rev" style="--d:.15s"><h2 style="margin-bottom:var(--e6)">{esc(t['tools_h'])}</h2><div class="herr">{herr}</div></div></div></div></section>'''
+    hab = HABILIDADES[lang]
+    def fila(items, extra=''):
+        li = ''.join(f'<li>{esc(x)}</li>' for x in items)
+        return f'<div class="mq-row {extra}"><div class="mq-r"><ul>{li}</ul><ul aria-hidden="true">{li}</ul></div></div>'
+    skills = fila(hab[0::2], 'a') + fila(hab[1::2], 'b')
+    return f'''<section class="pantalla" id="formacion" data-nombre="{esc(t['edu_h'])}" data-nav="sobre"><div class="wrap"><div class="form-top"><div class="edu rev"><h2>{esc(t['edu_h'])}</h2><div class="panel edu-panel"><p class="edu-y">{anio}</p><div><h3>{esc(g_en if en else g_es)}</h3><p class="emp">{esc(u)}</p><p class="nota">{esc(lugar)}</p></div></div></div>
+<div class="rev" style="--d:.15s"><h2>{esc(t['tools_h'])}</h2><div class="herr">{herr}</div></div></div></div>
+<div class="skills-blk"><div class="wrap"><h2>{esc(t['skills_h'])}</h2></div><div class="mq" aria-label="{esc(t['skills_h'])}">{skills}</div></div></section>'''
 
 
 def contacto_seccion(lang, aqui, tag='h2'):
@@ -737,22 +884,57 @@ def sobre_teaser(lang, aqui):
     t = UI[lang]
     ds = ''.join(f'<li>{ico(ic)}<div><strong>{esc(k)}</strong>{esc(v)}</div></li>' for (k, v), ic in zip(t['datos'], ('pin', 'birrete', 'maleta', 'capas')))
     return f'''<section class="pantalla fondo-suave" id="sobre" data-nombre="{esc(t['secciones'][3])}" data-nav="sobre"><div class="wrap"><div class="dos">
-<div class="sobre rev"><h2 style="margin-bottom:var(--e6)">{esc(t['sobre_h2'])}</h2><p class="lead">{esc(t['sobre_resumen'])}</p>
+<div class="sobre rev"><p class="etiqueta">{ico('estrella')}<span>{esc(HC[lang]['et_sobre'])}</span></p><h2 style="margin-bottom:var(--e6)">{esc(t['sobre_h2'])}</h2><p class="lead">{esc(t['sobre_resumen'])}</p>
 <p class="btns"><a class="btn primario" href="{rel(aqui, ruta('sobre', lang))}">{esc(t['leer_mas'])} {ico('flecha')}</a></p></div>
 <div class="panel rev" style="--d:.15s;align-self:center"><ul class="datos">{ds}</ul></div></div></div></section>'''
 
 
+def experiencia_home(lang, aqui):
+    h = HC[lang]; t = UI[lang]
+    filas = ''
+    for n, (anios, ces, cen, emp, des, den) in enumerate(EXPERIENCIA):
+        cargo = ces if lang == 'es' else cen
+        actual = f'<span class="actual">{esc(h["actual"])}</span>' if n == 0 else ''
+        desc = des if lang == 'es' else den
+        a = anios.replace("—", "— " + t["presente"]) if anios.endswith("—") else anios
+        filas += (f'<li class="tl-it" style="--k:{n}"><span class="tl-dot" aria-hidden="true"></span><article class="tl-card"><span class="anios">{esc(a)}</span>'
+                  f'<h3>{esc(cargo)}</h3>{actual}<p class="emp">{esc(emp)}</p><p class="desc">{esc(desc)}</p></article></li>')
+    return f'''<section class="exph" id="experiencia" data-nombre="{esc(t['exp_h'])}" data-nav="experiencia"><div class="tl-pin"><div class="wrap">
+<div class="exph-cab rev"><div><p class="etiqueta">{ico('estrella')}<span>{esc(h['et_exp'])}</span></p><h2>{esc(h['exp_titulo'])}</h2></div></div></div>
+<div class="tl-view wrap"><ol class="tl"><li class="tl-rail" aria-hidden="true"><i class="tl-fill"></i></li>{filas}</ol></div></div></section>'''
+
+
+def fab(lang):
+    h = HC[lang]; it = h['fab_items']
+    chat = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.500h16v10.500H9.500L5.500 19.500V16H4z"/></svg>'
+    cerrar = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+    return f'''<div class="fab" id="fab"><ul class="fab-menu" id="fab-menu">
+<li style="--k:2"><a href="{REDES[1][1]}" target="_blank" rel="noopener">{ico('linkedin')}<span>{esc(it[2])}</span></a></li>
+<li style="--k:1"><a href="{WHATSAPP}" target="_blank" rel="noopener">{ico('whatsapp')}<span>{esc(it[1])}</span></a></li>
+<li style="--k:0"><a href="mailto:{EMAIL}">{ico('correo')}<span>{esc(it[0])}</span></a></li></ul>
+<button type="button" class="fab-btn" aria-expanded="false" aria-controls="fab-menu" aria-label="{esc(h['fab_t'])}"><span class="fab-lbl">{esc(h['fab'])}</span><i class="chip"><span class="a">{chat}</span><span class="b">{cerrar}</span></i></button></div>
+<script>(function(){{var f=document.getElementById('fab'),b=f.querySelector('.fab-btn');function c(){{f.classList.remove('abierto');b.setAttribute('aria-expanded','false')}}
+b.addEventListener('click',function(e){{e.stopPropagation();var o=f.classList.toggle('abierto');b.setAttribute('aria-expanded',o?'true':'false')}});
+document.addEventListener('click',function(e){{if(!f.contains(e.target))c()}});document.addEventListener('keydown',function(e){{if(e.key==='Escape')c()}})}})();</script>'''
+
+
+def estadisticas(lang):
+    n = len(D['proyectos']) + len(NUEVOS)
+    items = ''.join(f'<li><b>{esc(v.replace("{n}", str(n)))}</b><span>{esc(k)}</span></li>' for v, k in HC[lang]['stats'])
+    return f'<section class="stats" aria-label="{esc(HC[lang]["et_sobre"])}"><div class="wrap"><ul>{items}</ul></div></section>'
+
+
 def cta_home(lang, aqui):
     t = UI[lang]; u = SERV_UI[lang]
-    return f'''<section class="pantalla" id="contacto" data-nombre="{esc(t['secciones'][5])}" data-nav="contacto"><div class="wrap"><div class="panel cta-final rev"><h2 class="gigante-m" style="margin-bottom:0">{esc(t['contacto_cta'])}</h2><p class="lead">{esc(t['contacto_lead'])}</p>
+    return f'''<section class="pantalla" id="contacto" data-nombre="{esc(t['secciones'][5])}" data-nav="contacto"><div class="wrap"><div class="panel cta-final rev"><p class="etiqueta">{ico('estrella')}<span>{esc(HC[lang]['et_contacto'])}</span></p><h2 class="gigante-m" style="margin-bottom:0">{esc(t['contacto_cta'])}</h2><p class="lead">{esc(t['contacto_lead'])}</p>
 <div class="btns">{botones_contacto(lang)}</div></div></div></section>'''
 
 
 def pagina_inicio(lang):
     t = UI[lang]; aqui = ruta('inicio', lang)
-    cuerpo = hero2(lang, aqui) + enunciado(lang) + galeria(lang, aqui) + (servicios_home(lang, aqui) if MOSTRAR_SERVICIOS else '') + sobre_teaser(lang, aqui) + cta_home(lang, aqui)
+    cuerpo = hero2(lang, aqui) + galeria(lang, aqui) + estadisticas(lang) + (servicios_home(lang, aqui) if MOSTRAR_SERVICIOS else '') + bio(lang, aqui) + experiencia_home(lang, aqui) + formacion(lang, aqui) + cta_home(lang, aqui)
     return pagina(lang, aqui, 'inicio', t['titulo_sitio'], t['desc_sitio'], cuerpo, ruta('inicio', 'en' if lang == 'es' else 'es'),
-                  extra_head=esquema_home(lang) + '<link rel="preconnect" href="https://cdn.myportfolio.com" crossorigin>\n', extra_body=f'<script src="{rel(aqui, "animar.js")}" defer></script>', body_class='home')
+                  extra_head=esquema_home(lang) + '<link rel="preconnect" href="https://cdn.myportfolio.com" crossorigin>\n', extra_body=f'<script src="{rel(aqui, "animar.js")}" defer></script>', body_class='home inicio-pg')
 
 
 def pagina_sobre(lang):
@@ -851,7 +1033,8 @@ f.addEventListener('submit',function(e){{e.preventDefault();
 
 
 EXPERIENCIA = [  # (años, cargo ES, cargo EN, empresa, descripción ES, descripción EN)
- ('2024 —', 'Líder del equipo de diseño', 'Design Team Lead', 'Partner in Publishing', 'Lidero proyectos de diseño para varias cuentas, con identidad de marca, material de marketing, presentaciones y contenido digital. Trabajo con marketing y copywriting y apoyo sistemas de diseño y accesibilidad.', 'I lead design projects across multiple client accounts, creating branding assets, marketing collateral, presentations and digital content. I work with marketing and copywriting teams and support design systems and accessibility standards.'),
+ ('2026 —', 'Líder del equipo de diseño', 'Design Team Lead', 'Partner in Publishing', 'Lidero proyectos de diseño para varias cuentas, con identidad de marca, material de marketing, presentaciones y contenido digital. Trabajo con marketing y copywriting y apoyo sistemas de diseño y accesibilidad.', 'I lead design projects across multiple client accounts, creating branding assets, marketing collateral, presentations and digital content. I work with marketing and copywriting teams and support design systems and accessibility standards.'),
+ ('2024 — 2026', 'Diseñadora gráfica y web', 'Graphic & Web Designer', 'Partner in Publishing', 'Sitios web, landing pages y activos digitales para marcas clientes, junto con material de marketing, contenido para redes y presentaciones alineados con sus guías de marca, aplicando buenas prácticas de accesibilidad (WCAG 2.1 AA).', 'Websites, landing pages and digital assets for client brands, plus marketing collateral, social content and presentations aligned with brand guidelines, applying accessibility best practices (WCAG 2.1 AA).'),
  ('2021 — 2024', 'Diseñadora gráfica y web', 'Graphic & Web Designer', 'Naranja Brand', 'Identidades visuales y materiales de marca alineados con los objetivos del cliente, y piezas digitales y publicitarias para distintos canales.', 'Visual identities and branding materials aligned with client objectives, plus digital and advertising assets across multiple channels.'),
  ('2020 — 2023', 'Diseñadora gráfica y web', 'Graphic & Web Designer', 'Magic Commerce', 'Activos de marca y materiales digitales para clientes; diseño y desarrollo de sitios web y tiendas online que combinan diseño visual y funcionalidad.', 'Branding assets and digital materials for clients; design and development of websites and e-commerce experiences combining visual design with functionality.'),
  ('2018 — 2021', 'Diseñadora gráfica y web', 'Graphic & Web Designer', 'Nevato', 'Piezas visuales para campañas de publicidad y marketing digital, y apoyo en proyectos web y materiales creativos para marcas clientes.', 'Visual assets for advertising and digital marketing campaigns, plus support on web design projects and creative materials for client brands.'),
@@ -859,13 +1042,13 @@ EXPERIENCIA = [  # (años, cargo ES, cargo EN, empresa, descripción ES, descrip
 ]
 EDUCACION = ('Universidad Privada Dr. Rafael Belloso Chacín', 'Licenciatura en Diseño Gráfico', 'Bachelor’s Degree in Graphic Design', 'Maracaibo, Venezuela', '2018')
 HERRAMIENTAS = [  # (grupo ES, grupo EN, [(nombre, archivo)])
- ('Diseño y creatividad', 'Design & Creative', [('Figma', 'figma'), ('Adobe Illustrator', 'illustrator'), ('Adobe Photoshop', 'photoshop'), ('Adobe InDesign', 'indesign'), ('Adobe Lightroom', 'lightroom')]),
+ ('Diseño y creatividad', 'Design & Creative', [('Figma', 'figma'), ('Adobe Illustrator', 'illustrator'), ('Adobe Photoshop', 'photoshop'), ('Adobe InDesign', 'indesign'), ('Adobe Lightroom', 'lightroom'), ('After Effects', 'aftereffects')]),
  ('Web y e-commerce', 'Web & E-commerce', [('Shopify', 'shopify'), ('WordPress', 'wordpress')]),
  ('Marketing y contenido', 'Marketing & Content', [('Mailchimp', 'mailchimp'), ('CapCut', 'capcut'), ('Canva', 'canva')]),
  ('IA y productividad', 'AI & Productivity', [('Claude', 'claude'), ('ChatGPT', 'chatgpt'), ('Adobe Firefly', 'firefly'), ('Gemini', 'gemini'), ('ClickUp', 'clickup'), ('Slack', 'slack')]),
 ]
-HABILIDADES = {'es': ['Identidad de marca', 'Branding', 'Dirección de arte', 'Manuales de marca', 'Diseño digital', 'Diseño web', 'Diseño para e-commerce', 'Landing pages', 'Sistemas de diseño', 'Diseño de marketing', 'Diseño editorial', 'Diseño para redes sociales', 'Accesibilidad digital (WCAG 2.1 AA)'],
- 'en': ['Brand Identity', 'Branding', 'Art Direction', 'Brand Guidelines', 'Digital Design', 'Web Design', 'E-commerce Design', 'Landing Pages', 'Design Systems', 'Marketing Design', 'Editorial Design', 'Social Media Design', 'Digital Accessibility (WCAG 2.1 AA)']}
+HABILIDADES = {'es': ['Identidad de marca', 'Branding', 'Dirección de arte', 'Manuales de marca', 'Diseño digital', 'Diseño web', 'Diseño para e-commerce', 'Landing pages', 'Sistemas de diseño', 'Diseño editorial', 'Diseño para redes sociales', 'Infografías', 'White papers', 'Annual reports', 'Diseño de ads', 'Email marketing', 'Presentaciones', 'Diseño con IA', 'Accesibilidad digital (WCAG 2.1 AA)'],
+ 'en': ['Brand Identity', 'Branding', 'Art Direction', 'Brand Guidelines', 'Digital Design', 'Web Design', 'E-commerce Design', 'Landing Pages', 'Design Systems', 'Editorial Design', 'Social Media Design', 'Infographics', 'White Papers', 'Annual Reports', 'Ad Design', 'Email Marketing', 'Presentations', 'AI Design', 'Digital Accessibility (WCAG 2.1 AA)']}
 
 
 FILTRO_JS = '''<script>
@@ -874,6 +1057,27 @@ bs.forEach(function(b){b.addEventListener('click',function(){var c=b.getAttribut
 bs.forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});ul.classList.toggle('filtrada',c!=='todos');
 lis.forEach(function(li){li.hidden=!(c==='todos'||(' '+li.getAttribute('data-cat')+' ').indexOf(' '+c+' ')>-1)});});});})();
 </script>'''
+
+
+INT_JS = lambda aqui: f'<script src="{rel(aqui, "interno.js")}" defer></script>'
+
+
+def cab_int(eyebrow, h1, lead='', extra=''):
+    ld = f'<p class="lead">{lead}</p>' if lead else ''
+    return f'''<section class="cab-int wrap"><p class="etiqueta">{ico('estrella')}<span>{esc(eyebrow)}</span></p><h1>{h1}</h1>{ld}{extra}</section>'''
+
+
+def cta_interna(lang, aqui):
+    return cta_home(lang, aqui).replace(' data-nav="contacto"', '').replace(' data-nombre=', ' data-x=')
+
+
+def pagina_cv():
+    lang = 'en'; aqui = 'cv-mariana-boscan/'
+    cab = cab_int('Curriculum vitae', 'Mariana <span class="serif">Boscán</span>', 'Senior Graphic Designer based in Bogotá, Colombia',
+        extra='''<p class="btns"><a class="btn primario" href="Mariana-Boscan-CV.pdf" download><span>Download PDF</span><i class="chip">''' + ico('flecha') + '''</i></a><a class="btn" href="Mariana-Boscan-CV.pdf" target="_blank" rel="noopener"><span>Open full size</span></a><a class="btn" href="../work/"><span>View my portfolio</span></a></p>''')
+    hoja = '<section class="wrap hoja-int"><div class="hoja rev"><img src="cv-preview.webp" width="2040" height="3370" alt="Curriculum vitae of Mariana Boscán, Senior Graphic Designer. Download the PDF for the full text."></div></section>'
+    return pagina(lang, aqui, 'cv', 'Mariana Boscán — CV', 'Curriculum vitae of Mariana Boscán, Senior Graphic Designer.', cab + hoja + cta_interna(lang, aqui), 'es/',
+                  extra_body=INT_JS(aqui), body_class='interna cv-int', robots='noindex,nofollow,noarchive,nosnippet')
 
 
 def pagina_portafolio(lang):
@@ -885,13 +1089,13 @@ def pagina_portafolio(lang):
     filtros = f'<button type="button" data-f="todos" aria-pressed="true">{esc(t["todos"])}</button>' + ''.join(
         f'<button type="button" data-f="{c}" aria-pressed="false">{esc(CATS[c][0 if lang == "es" else 1])}</button>' for c in orden)
     cards = ''.join(tarjeta_ext(e, lang, i + 1, aqui) for i, e in enumerate(NUEVOS)) + ''.join(tarjeta(p, lang, aqui, len(NUEVOS) + i + 1) for i, p in enumerate(D['proyectos']))
-    cuerpo = f'''<section class="cab-pagina wrap"><h1>{h1_html(t['port_h1'])}</h1><p class="lead">{esc(t['port_lead'])}</p></section>
-<section class="wrap"><div class="filtros" role="group" aria-label="{esc(t['cat_nombre'])}" id="filtros" hidden>{filtros}</div>
+    cuerpo = cab_int(HC[lang]['et_obra'], h1_html(t['port_h1']), esc(t['port_lead'])) + f'''
+<section class="wrap lista-int"><div class="filtros" role="group" aria-label="{esc(t['cat_nombre'])}" id="filtros" hidden>{filtros}</div>
 <ul class="rejilla">{cards}</ul>
-<p class="btns"><a class="btn" href="https://www.behance.net/marianaboscan" target="_blank" rel="noopener">{esc(t['ver_behance'])} ↗</a></p></section>
-<script>document.getElementById("filtros").hidden=false</script>'''
+<p class="btns centrado"><a class="btn" href="https://www.behance.net/marianaboscan" target="_blank" rel="noopener"><span>{esc(t['ver_behance'])}</span><i class="chip">{ico('flecha')}</i></a></p></section>
+<script>document.getElementById("filtros").hidden=false</script>''' + cta_interna(lang, aqui)
     return pagina(lang, aqui, 'portafolio', f"{t['nav']['portafolio']} — Mariana Boscán", t['port_lead'], cuerpo,
-                  ruta('portafolio', 'en' if lang == 'es' else 'es'), extra_body=FILTRO_JS)
+                  ruta('portafolio', 'en' if lang == 'es' else 'es'), extra_body=FILTRO_JS + INT_JS(aqui), body_class='interna')
 
 
 
@@ -906,11 +1110,11 @@ def pagina_proyecto(i, lang):
         else:
             piezas.append(f'<div class="pieza" style="aspect-ratio:16/9"><iframe src="https://www-ccv.adobe.io/v1/player/ccv/{m[1]}/embed?bgcolor=%23191919&amp;lazyLoading=true&amp;api_key=BehancePro2View" title="{esc(marca)} — {esc(desc)}" loading="lazy" allow="fullscreen; autoplay" allowfullscreen></iframe></div>')
     ant, sig = ps[i - 1], ps[(i + 1) % len(ps)]
-    cuerpo = f'''<section class="cab-pagina wrap" style="padding-bottom:var(--e8)"><h1 style="font-size:clamp(40px,7vw,80px)">{esc(marca)}</h1><p class="lead">{esc(desc)}</p></section>
-<section class="wrap"><div class="pila">{''.join(piezas)}</div>
-<div class="pager"><a class="btn" href="{rel(aqui, proy_ruta(ant['s'], lang))}">← {esc(t['anterior'])}</a><a class="btn" href="{rel(aqui, ruta('portafolio', lang))}">{esc(t['volver'])}</a><a class="btn" href="{rel(aqui, proy_ruta(sig['s'], lang))}">{esc(t['siguiente'])} →</a></div></section>'''
+    cuerpo = cab_int(CATS[cat][0 if lang == 'es' else 1], esc(marca), esc(desc)) + f'''
+<section class="wrap pila-int"><div class="pila">{''.join(piezas)}</div>
+<div class="pager"><a class="btn" href="{rel(aqui, proy_ruta(ant['s'], lang))}">← {esc(t['anterior'])}</a><a class="btn" href="{rel(aqui, ruta('portafolio', lang))}">{esc(t['volver'])}</a><a class="btn" href="{rel(aqui, proy_ruta(sig['s'], lang))}">{esc(t['siguiente'])} →</a></div></section>''' + cta_interna(lang, aqui)
     otra = proy_ruta(p['s'], 'en' if lang == 'es' else 'es')
-    return pagina(lang, aqui, 'portafolio', f'{marca} — {desc} | Mariana Boscán', f'{marca}: {desc}. {t["desc_sitio"]}'[:250], cuerpo, otra, og_img=BASE + p['c'][1])
+    return pagina(lang, aqui, 'portafolio', f'{marca} — {desc} | Mariana Boscán', f'{marca}: {desc}. {t["desc_sitio"]}'[:250], cuerpo, otra, og_img=BASE + p['c'][1], extra_body=INT_JS(aqui), body_class='interna')
 
 
 DESCARGADOR = '''<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -965,9 +1169,12 @@ def main():
     for d in ('assets', 'fonts'): shutil.copytree(os.path.join(AQUI, 'src', d), os.path.join(DIST, d))
     shutil.copy(os.path.join(AQUI, 'src', 'estilos.css'), os.path.join(DIST, 'styles.css'))
     shutil.copy(os.path.join(AQUI, 'src', 'animar.js'), DIST)
+    shutil.copy(os.path.join(AQUI, 'src', 'interno.js'), DIST)
     os.makedirs(os.path.join(DIST, 'cierre'), exist_ok=True)
     shutil.copy(os.path.join(AQUI, 'src', 'cierre.html'), os.path.join(DIST, 'cierre', 'index.html'))
-    shutil.copytree(os.path.join(AQUI, 'src', 'cv'), os.path.join(DIST, 'cv-mariana-boscan'))   # CV: sin enlaces desde el sitio, fuera del sitemap y noindex
+    os.makedirs(os.path.join(DIST, 'cv-mariana-boscan'), exist_ok=True)   # CV: fuera del sitemap y noindex
+    for f in ('Mariana-Boscan-CV.pdf', 'cv-preview.webp'): shutil.copy(os.path.join(AQUI, 'src', 'cv', f), os.path.join(DIST, 'cv-mariana-boscan', f))
+    escribir('cv-mariana-boscan/', pagina_cv())
     os.makedirs(os.path.join(DIST, 'cv-mariana-hkxmcj9e'), exist_ok=True)   # enlace anterior: redirige al nuevo
     open(os.path.join(DIST, 'cv-mariana-hkxmcj9e', 'index.html'), 'w').write('<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><title>CV</title><meta http-equiv="refresh" content="0; url=../cv-mariana-boscan/"><a href="../cv-mariana-boscan/">CV</a>')
     if os.path.isdir(SRC_IMG): shutil.copytree(SRC_IMG, os.path.join(DIST, 'img'))
@@ -976,6 +1183,8 @@ def main():
     for lang in ('es', 'en'):
         for clave, fn in (('inicio', pagina_inicio), ('servicios', pagina_servicios), ('portafolio', pagina_portafolio), ('sobre', pagina_sobre), ('contacto', pagina_contacto)):
             if clave == 'servicios' and not MOSTRAR_SERVICIOS: continue
+            if clave in ('sobre', 'contacto'):   # todo vive en el home: la página vieja redirige a su sección
+                escribir(ruta(clave, lang), redireccion(ruta(clave, lang), ruta('inicio', lang) + '#' + clave)); continue
             escribir(ruta(clave, lang), fn(lang)); urls.append(ruta(clave, lang))
         for k in ORDEN:
             if MOSTRAR_SERVICIOS:
@@ -1004,8 +1213,8 @@ def main():
     for v, n in (('servicios/', ruta('portafolio', 'es')), ('en/services/', ruta('portafolio', 'en'))):
         if not os.path.exists(os.path.join(DIST, v, 'index.html')): escribir(v, redireccion(v, n))
     # 404 (GitHub Pages la usa sola)
-    escribir('404.html', pagina('es', '', 'inicio', 'No encontrada · Not found — Mariana Boscán', 'Página no encontrada',
-        '<section class="hero wrap"><h1>Esta página <span class="serif">no existe</span></h1><p class="lead">This page doesn’t exist.</p><div class="btns"><a class="btn primario" href="/">Home</a><a class="btn" href="/es/">Inicio (ES)</a></div></section>', ''))
+    escribir('404.html', pagina('es', '', '404', 'No encontrada · Not found — Mariana Boscán', 'Página no encontrada',
+        cab_int('Error 404', 'Esta página <span class="serif">no existe</span>', 'This page doesn’t exist.', extra='<p class="btns"><a class="btn primario" href="/"><span>Home</span></a><a class="btn" href="/es/"><span>Inicio (ES)</span></a></p>'), '', body_class='interna'))
     hoy = date.today().isoformat()
     sm = ''.join(f'<url><loc>{url_abs(u)}</loc><lastmod>{hoy}</lastmod></url>\n' for u in urls)
     open(os.path.join(DIST, 'sitemap.xml'), 'w').write(f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{sm}</urlset>\n')
