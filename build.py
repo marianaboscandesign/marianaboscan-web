@@ -534,7 +534,7 @@ def pagina(lang, aqui, clave, titulo, desc, cuerpo, otra_ruta, og_img=None, extr
 <meta name="twitter:card" content="summary_large_image">
 <meta name="robots" content="{robots}">
 <meta name="theme-color" content="#14141e">
-<link rel="icon" type="image/svg+xml" href="{a}mariana-boscan-isotipo-tinta.svg">
+<link rel="icon" type="image/svg+xml" href="{a}mariana-boscan-favicon.svg">
 <link rel="preload" href="{rel(aqui, 'fonts/')}DMSans-Variable.woff2" as="font" type="font/woff2" crossorigin>
 {TEMA_HEAD}
 {lang_script}<link rel="stylesheet" href="{rel(aqui, 'styles.css')}">
@@ -598,7 +598,7 @@ if not MOSTRAR_SERVICIOS:   # textos para reclutadores y agencias (sin servicios
         port_lead='Identidades de marca, web, UI, social media, piezas editoriales y casos de estudio.',
         contacto_cta='Conectemos', contacto_btn='Escríbeme', contacto_h1=('Conectemos', ''),
         contacto_lead='Si tu equipo o agencia busca una diseñadora senior o líder de diseño, escríbeme y conversamos.',
-        pie='Design Team Lead · Bogotá, Colombia')
+        pie='Diseñadora gráfica senior · Bogotá, Colombia')
     UI['en'].update(
         titulo_sitio='Mariana Boscán | Design Team Lead & Senior Graphic Designer',
         desc_sitio='Portfolio of Mariana Boscán, Design Team Lead and senior graphic designer with 8+ years of experience in branding, web, UI, editorial and design systems.',
@@ -607,7 +607,7 @@ if not MOSTRAR_SERVICIOS:   # textos para reclutadores y agencias (sin servicios
         port_lead='Brand identities, web, UI, social media, editorial pieces and case studies.',
         contacto_cta='Let’s connect', contacto_btn='Get in touch', contacto_h1=('Let’s ', 'connect'),
         contacto_lead='If your team or agency is looking for a senior designer or design lead, write to me and let’s talk.',
-        pie='Design Team Lead · Bogotá, Colombia')
+        pie='Senior Graphic Designer · Bogotá, Colombia')
     UI['es'].update(f_err='No pude enviar el mensaje. Escríbeme directamente por correo o LinkedIn.', f_lim='Has enviado varios mensajes seguidos. Intenta de nuevo más tarde o escríbeme por correo.')
     UI['en'].update(f_err='I couldn’t send the message. Please email me or message me on LinkedIn.', f_lim='You’ve sent several messages in a row. Try again later or email me.')
     SERV_UI['es'].update(cta_h='Conectemos', cta_p='Si tu equipo o agencia busca una diseñadora senior o líder de diseño, escríbeme.', cta_b='Escríbeme')
@@ -746,7 +746,7 @@ def hero_cine(lang, aqui):
 <div class="hc-vel" aria-hidden="true"></div><div class="hc-grano" aria-hidden="true"></div>
 <div class="hc-bar t" aria-hidden="true"></div><div class="hc-bar b" aria-hidden="true"></div>
 <div class="hc-in"><div class="hc-texto"><p class="etiqueta hc-et">{ico('estrella')}<span>{esc(h['etiqueta'])}</span></p>
-<h1 class="hc-h1">{a}<br>{b} {c}</h1>
+<h1 class="hc-h1">{a}<br><span class="ln">{b} {c}</span></h1>
 <p class="hc-sub">{esc(t['hero_sub'])}</p>
 <div class="btns"><a class="btn blanco" href="#contacto"><span>{esc(t['hero_cta'])}</span><i class="chip">{ico('flecha')}</i></a><a class="btn hc-ghost" href="#proyectos"><span>{esc(t['ver_portafolio'])}</span><i class="chip">{ico('flecha')}</i></a></div></div>
 <aside class="hc-vidrio"><i class="hv-ic">{ico('estrella')}</i><p class="hv-q">{esc(' '.join(x for x, _ in t['enunciado']))}</p><p class="hv-f">Mariana Boscán</p></aside></div>
