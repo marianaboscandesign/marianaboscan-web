@@ -10,6 +10,7 @@ DIST = os.path.join(AQUI, os.environ.get('DIST', 'dist'))
 PREVIEW = bool(os.environ.get('PREVIEW'))  # solo para ver el sitio en una vista previa sin servidor
 SITIO = 'https://www.marianaboscan.com'          # dominio final (canonical, hreflang, sitemap)
 ENDPOINT = os.environ.get('ENDPOINT', 'https://script.google.com/macros/s/AKfycbyPGrFhGQFpCaKIa1HACdf1oGdl0Xd4BDnkbMsJFDCkpSmVYo_t8LmkTzR0RAoNGSaRxw/exec')  # misma URL /exec del formulario de revisa-logo
+MOSTRAR_SERVICIOS = False  # False = sitio de portafolio para reclutadores: sin servicios ni captación de clientes. True = vuelve todo.
 FORM_LOGO = 'https://revisa.marianaboscan.com'
 EMAIL = 'marianaboscandesign@gmail.com'
 WHATSAPP = 'https://wa.me/573243591199'
@@ -85,9 +86,10 @@ CATS = {'branding': ('Branding', 'Branding'), 'web': ('Web', 'Web'), 'social': (
         'editorial': ('Editorial', 'Editorial'), 'packaging': ('Empaques', 'Packaging'), 'video': ('Video y campañas', 'Video & campaigns')}
 
 # páginas: clave -> (ruta ES, ruta EN)
-RUTAS = {'inicio': ('', 'en/'), 'servicios': ('servicios/', 'en/services/'), 'portafolio': ('portafolio/', 'en/work/'), 'sobre': ('sobre-mi/', 'en/about/'), 'contacto': ('contacto/', 'en/contact/')}
+# inglés en la raíz (idioma por defecto), español bajo /es/
+RUTAS = {'inicio': ('es/', ''), 'servicios': ('es/servicios/', 'services/'), 'portafolio': ('es/portafolio/', 'work/'), 'sobre': ('es/sobre-mi/', 'about/'), 'contacto': ('es/contacto/', 'contact/')}
 # direcciones antiguas del portafolio de Adobe -> redirección a las nuevas
-REDIRECCIONES = {'work/': 'portafolio/', 'bio-2/': 'sobre-mi/', 'contact/': 'contacto/'}
+REDIRECCIONES = {'bio-2/': 'about/'}
 
 UI = {
  'es': dict(lang='es', nav={'inicio': 'Inicio', 'servicios': 'Servicios', 'portafolio': 'Portafolio', 'sobre': 'Sobre mí', 'contacto': 'Contacto'},
@@ -170,7 +172,7 @@ def h1_html(par, fin=''):
     return f'{esc(pre)}<span class="serif">{esc(serif)}</span>{esc(fin)}'
 
 
-def proy_ruta(slug, lang): return slug + '/' if lang == 'es' else 'en/' + slug + '/'
+def proy_ruta(slug, lang): return 'es/' + slug + '/' if lang == 'es' else slug + '/'
 
 
 
@@ -205,7 +207,7 @@ def pie(lang, aqui=''):
     redes = ''.join(f'<li><a class="red" href="{u}" target="_blank" rel="noopener" aria-label="{n}" title="{n}">{ico(i)}</a></li>' for n, u, i in REDES_ICO)
     return f'''<footer class="pie"><div class="wrap fila"><div><small>© {date.today().year} Mariana Boscán · {esc(t['derechos'])}<br>{esc(t['pie'])}</small></div>
 <ul class="redes">{redes}</ul></div>
-<nav class="wrap pie-serv" aria-label="{esc(SERV_UI[lang]['servicios'])}"><ul>{serv}</ul></nav></footer>'''
+{f'<nav class="wrap pie-serv" aria-label="{esc(SERV_UI[lang]["servicios"])}"><ul>{serv}</ul></nav>' if MOSTRAR_SERVICIOS else ''}</footer>'''
 
 
 SERV_UI = {
@@ -216,7 +218,7 @@ SERV_UI = {
 }
 
 
-def ruta_serv(k, lang): return SERVICIOS[k]['slug'][0 if lang == 'es' else 1] + '/'
+def ruta_serv(k, lang): return ('es/' if lang == 'es' else '') + SERVICIOS[k]['slug'][0 if lang == 'es' else 1] + '/'
 
 
 def jsonld(obj):
@@ -229,14 +231,14 @@ def esquema_home(lang):
     return jsonld({'@context': 'https://schema.org', '@graph': [
         {'@type': 'WebSite', '@id': SITIO + '/#web', 'url': SITIO + '/', 'name': 'Mariana Boscán', 'inLanguage': ['es', 'en']},
         {'@type': 'Person', '@id': SITIO + '/#persona', 'name': 'Mariana Boscán', 'url': SITIO + '/', 'image': SITIO + '/img/og.jpg',
-         'jobTitle': 'Diseñadora gráfica senior' if lang == 'es' else 'Senior Graphic Designer', 'email': EMAIL,
+         'jobTitle': 'Design Team Lead · Diseñadora gráfica senior' if lang == 'es' else 'Design Team Lead · Senior Graphic Designer', 'email': EMAIL,
          'address': {'@type': 'PostalAddress', 'addressLocality': 'Bogotá', 'addressCountry': 'CO'},
          'sameAs': [REDES[0][1], REDES[1][1], REDES[2][1]],
-         'knowsAbout': ['Branding', 'Diseño de logos', 'Manual de marca', 'Tiendas online en Shopify', 'Diseño de redes sociales', 'Diseño web', 'Diseño editorial', 'Miniaturas de YouTube']},
-        {'@type': 'ProfessionalService', '@id': SITIO + '/#servicio', 'name': 'Mariana Boscán — ' + ('Diseño gráfico' if lang == 'es' else 'Graphic design'), 'url': u,
+         'knowsAbout': ['Branding', 'Identidad visual', 'Sistemas de diseño', 'Diseño web', 'UI', 'Diseño editorial', 'Diseño de redes sociales', 'Diseño accesible']},
+        *([] if not MOSTRAR_SERVICIOS else [{'@type': 'ProfessionalService', '@id': SITIO + '/#servicio', 'name': 'Mariana Boscán — ' + ('Diseño gráfico' if lang == 'es' else 'Graphic design'), 'url': u,
          'image': SITIO + '/img/og.jpg', 'telephone': '+573243591199', 'email': EMAIL, 'founder': {'@id': SITIO + '/#persona'},
          'address': {'@type': 'PostalAddress', 'addressLocality': 'Bogotá', 'addressCountry': 'CO'},
-         'areaServed': [{'@type': 'Country', 'name': 'Colombia'}, {'@type': 'Place', 'name': 'Worldwide'}], 'hasOfferCatalog': {'@type': 'OfferCatalog', 'name': SERV_UI[lang]['h2'], 'itemListElement': ofertas}}]})
+         'areaServed': [{'@type': 'Country', 'name': 'Colombia'}, {'@type': 'Place', 'name': 'Worldwide'}], 'hasOfferCatalog': {'@type': 'OfferCatalog', 'name': SERV_UI[lang]['h2'], 'itemListElement': ofertas}}])]})
 
 
 def servicios_home(lang, aqui):
@@ -272,6 +274,17 @@ def serv_img(k, tipo, aqui, alt, lazy=True):
     return ''
 
 
+def WA_BTN(u):
+    return f'<a class="btn" href="{WHATSAPP}" target="_blank" rel="noopener">{ico("whatsapp")} {esc(u["wa"])}</a>' 
+
+
+def botones_contacto(lang):
+    et = {'es': ('Escríbeme por correo', 'LinkedIn', 'WhatsApp'), 'en': ('Email me', 'Connect on LinkedIn', 'WhatsApp')}[lang]
+    return (f'<a class="btn primario" href="mailto:{EMAIL}">{ico("correo")} {esc(et[0])}</a>'
+            f'<a class="btn" href="{REDES[1][1]}" target="_blank" rel="noopener">{ico("linkedin")} {esc(et[1])}</a>'
+            f'<a class="btn" href="{WHATSAPP}" target="_blank" rel="noopener">{ico("whatsapp")} {esc(et[2])}</a>')
+
+
 def btn_contacto(lang, aqui, texto=None, primario=True):
     u = SERV_UI[lang]
     return f'<a class="btn{" primario" if primario else ""}" href="{rel(aqui, ruta("contacto", lang))}">{esc(texto or u["cta_b"])} {ico("flecha")}</a>'
@@ -282,7 +295,7 @@ def cta_final(lang, aqui, k=None):
     otros = ''
     if k:
         otros = f'<p class="otros-t">{esc(u["otros"])}</p><ul class="otros">' + ''.join(f'<li><a class="btn" href="{rel(aqui, ruta_serv(o, lang))}">{esc(SERVICIOS[o][lang]["nav"])}</a></li>' for o in ORDEN if o != k) + '</ul>'
-    return f'''<section class="wrap seccion"><div class="panel cta-final rev"><h2>{esc(u['cta_h'])}</h2><p class="lead">{esc(u['cta_p'])}</p><div class="btns">{btn_contacto(lang, aqui)}<a class="btn" href="{WHATSAPP}" target="_blank" rel="noopener">{ico('whatsapp')} {esc(u['wa'])}</a></div>{otros}</div></section>'''
+    return f'''<section class="wrap seccion"><div class="panel cta-final rev"><h2>{esc(u['cta_h'])}</h2><p class="lead">{esc(u['cta_p'])}</p><div class="btns">{botones_contacto(lang)}</div>{otros}</div></section>'''
 
 
 def pagina_servicio(k, lang):
@@ -476,7 +489,7 @@ def cabecera(lang, aqui, clave, otra_ruta):
     a = rel(aqui, 'assets/')
     otro = 'en' if lang == 'es' else 'es'
     home = ruta('inicio', lang)
-    nav = ''.join(f'<a href="{rel(aqui, ruta(k, lang))}"{" aria-current=page" if k == clave else ""}>{esc(v)}</a>' for k, v in t['nav'].items())
+    nav = ''.join(f'<a href="{rel(aqui, ruta(k, lang))}"{" aria-current=page" if k == clave else ""}>{esc(v)}</a>' for k, v in t['nav'].items() if MOSTRAR_SERVICIOS or k != 'servicios')
     nombres = {'es': 'Español', 'en': 'English'}
     items = ''.join(
         f'<li><a href="{rel(aqui, otra_ruta) if l != lang else "#"}" hreflang="{l}" lang="{l}"{" aria-current=true" if l == lang else ""}>{nombres[l]}<small>{l.upper()}</small></a></li>'
@@ -497,6 +510,10 @@ def cabecera(lang, aqui, clave, otra_ruta):
 def pagina(lang, aqui, clave, titulo, desc, cuerpo, otra_ruta, og_img=None, extra_head='', extra_body='', body_class='', robots='index,follow,max-image-preview:large'):
     t = UI[lang]
     es_ruta, en_ruta = (aqui, otra_ruta) if lang == 'es' else (otra_ruta, aqui)
+    # inglés por defecto; si el navegador está en español (y no eligió idioma a mano) se manda a la versión en español
+    guardar = "document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[hreflang]');if(a){try{localStorage.setItem('lang',a.getAttribute('hreflang'))}catch(_){}}});"
+    ir_es = ("try{if(!localStorage.getItem('lang')){var l=((navigator.languages&&navigator.languages[0])||navigator.language||'en').toLowerCase();if(l.indexOf('es')===0){location.replace(" + json.dumps(rel(aqui, es_ruta)) + "+location.hash)}}}catch(_){}") if lang == 'en' else ''
+    lang_script = f'<script>{ir_es}{guardar}</script>\n'
     canon = url_abs(aqui)
     a = rel(aqui, 'assets/')
     og = og_img or (SITIO + '/img/og.jpg' if 'og.jpg' in LOCALES else BASE + D['proyectos'][0]['c'][1])
@@ -511,7 +528,7 @@ def pagina(lang, aqui, clave, titulo, desc, cuerpo, otra_ruta, og_img=None, extr
 <link rel="canonical" href="{canon}">
 <link rel="alternate" hreflang="es" href="{url_abs(es_ruta)}">
 <link rel="alternate" hreflang="en" href="{url_abs(en_ruta)}">
-<link rel="alternate" hreflang="x-default" href="{url_abs(es_ruta)}">
+<link rel="alternate" hreflang="x-default" href="{url_abs(en_ruta)}">
 <meta property="og:type" content="website"><meta property="og:title" content="{esc(titulo)}"><meta property="og:description" content="{esc(desc)}">
 <meta property="og:url" content="{canon}"><meta property="og:image" content="{og}"><meta property="og:locale" content="{t['og_locale']}"><meta property="og:site_name" content="Mariana Boscán">
 <meta name="twitter:card" content="summary_large_image">
@@ -520,7 +537,7 @@ def pagina(lang, aqui, clave, titulo, desc, cuerpo, otra_ruta, og_img=None, extr
 <link rel="icon" type="image/svg+xml" href="{a}mariana-boscan-isotipo-tinta.svg">
 <link rel="preload" href="{rel(aqui, 'fonts/')}DMSans-Variable.woff2" as="font" type="font/woff2" crossorigin>
 {TEMA_HEAD}
-<link rel="stylesheet" href="{rel(aqui, 'styles.css')}">
+{lang_script}<link rel="stylesheet" href="{rel(aqui, 'styles.css')}">
 {extra_head}</head>
 <body class="{body_class}">
 {cabecera(lang, aqui, clave, otra_ruta)}
@@ -570,6 +587,30 @@ NUEVO = {
   contacto_cta='Have a project in mind?', contacto_btn='Let’s talk', secciones=['Home', 'Idea', 'Work', 'About', 'Tool', 'Contact']),
 }
 for _l in NUEVO: UI[_l].update(NUEVO[_l])
+
+if not MOSTRAR_SERVICIOS:   # textos para reclutadores y agencias (sin servicios ni captación de clientes)
+    UI['es'].update(
+        titulo_sitio='Mariana Boscán | Design Team Lead y diseñadora gráfica senior',
+        desc_sitio='Portafolio de Mariana Boscán, Design Team Lead y diseñadora gráfica senior con más de 8 años de experiencia en branding, web, UI, editorial y sistemas de diseño.',
+        hero_sub='Soy Mariana Boscán, Design Team Lead y diseñadora gráfica senior. Más de 8 años liderando y creando branding, web, UI y sistemas de diseño para equipos y agencias internacionales.',
+        hero_cta='Conectemos', vidrios=[('Branding', 'Identidad visual', 'capas'), ('Web y UI', 'Sitios y sistemas', 'pantalla'), ('Editorial', 'Informes y marcas', 'libro'), ('Social', 'Contenido digital', 'chat')],
+        port_lead='Identidades de marca, web, UI, social media, piezas editoriales y casos de estudio.',
+        contacto_cta='Conectemos', contacto_btn='Escríbeme', contacto_h1=('Conectemos', ''),
+        contacto_lead='Si tu equipo o agencia busca una diseñadora senior o líder de diseño, escríbeme y conversamos.',
+        pie='Design Team Lead · Bogotá, Colombia')
+    UI['en'].update(
+        titulo_sitio='Mariana Boscán | Design Team Lead & Senior Graphic Designer',
+        desc_sitio='Portfolio of Mariana Boscán, Design Team Lead and senior graphic designer with 8+ years of experience in branding, web, UI, editorial and design systems.',
+        hero_sub='I’m Mariana Boscán, a Design Team Lead and senior graphic designer. 8+ years leading and creating branding, web, UI and design systems for international teams and agencies.',
+        hero_cta='Let’s connect', vidrios=[('Branding', 'Visual identity', 'capas'), ('Web & UI', 'Sites & systems', 'pantalla'), ('Editorial', 'Reports & brands', 'libro'), ('Social', 'Digital content', 'chat')],
+        port_lead='Brand identities, web, UI, social media, editorial pieces and case studies.',
+        contacto_cta='Let’s connect', contacto_btn='Get in touch', contacto_h1=('Let’s ', 'connect'),
+        contacto_lead='If your team or agency is looking for a senior designer or design lead, write to me and let’s talk.',
+        pie='Design Team Lead · Bogotá, Colombia')
+    UI['es'].update(f_err='No pude enviar el mensaje. Escríbeme directamente por correo o LinkedIn.', f_lim='Has enviado varios mensajes seguidos. Intenta de nuevo más tarde o escríbeme por correo.')
+    UI['en'].update(f_err='I couldn’t send the message. Please email me or message me on LinkedIn.', f_lim='You’ve sent several messages in a row. Try again later or email me.')
+    SERV_UI['es'].update(cta_h='Conectemos', cta_p='Si tu equipo o agencia busca una diseñadora senior o líder de diseño, escríbeme.', cta_b='Escríbeme')
+    SERV_UI['en'].update(cta_h='Let’s connect', cta_p='If your team or agency is looking for a senior designer or design lead, write to me.', cta_b='Get in touch')
 ICONOS_EXTRA = {
  'pantalla': '<rect x="3" y="4.5" width="18" height="12" rx="2.5"/><path d="M8 20h8M12 16.5V20"/>',
  'libro': '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/>',
@@ -683,12 +724,13 @@ def formacion(lang, aqui):
 
 def contacto_seccion(lang, aqui, tag='h2'):
     t = UI[lang]
+    et = {'es': ('Correo', 'Escríbeme directo'), 'en': ('Email', 'Write to me directly')}[lang]
     return f'''<section class="pantalla" id="contacto" data-nombre="{esc(t['secciones'][5])}" data-nav="contacto"><div class="wrap"><div class="dos contacto-grid"><div class="rev"><{tag} class="gigante-m">{esc(t['contacto_cta'])}</{tag}><p class="lead">{esc(t['contacto_lead'])}</p>
-<ul class="datos"><li>{ico('whatsapp')}<div><strong>{esc(t['whatsapp'])}</strong><a href="{WHATSAPP}" target="_blank" rel="noopener">+57 324 359 1199</a></div></li>
-<li>{ico('correo')}<div><strong>{esc(t['correo'])}</strong><a href="mailto:{EMAIL}">{EMAIL}</a></div></li>
-<li>{ico('tiktok')}<div><strong>TikTok</strong><a href="{REDES[0][1]}" target="_blank" rel="noopener">@marianaboscandesign</a></div></li>
-<li>{ico('linkedin')}<div><strong>LinkedIn</strong><a href="{REDES[1][1]}" target="_blank" rel="noopener">Mariana Boscán</a></div></li></ul></div>
-<div class="rev" style="--d:.15s">{contacto_form(lang)}</div></div></div></section>'''
+<div class="btns" style="margin-top:var(--e6)">{botones_contacto(lang)}</div></div>
+<div class="rev" style="--d:.15s"><ul class="datos panel"><li>{ico('correo')}<div><strong>{esc(t['correo'])}</strong><a href="mailto:{EMAIL}">{EMAIL}</a></div></li>
+<li>{ico('linkedin')}<div><strong>LinkedIn</strong><a href="{REDES[1][1]}" target="_blank" rel="noopener">Mariana Boscán</a></div></li>
+<li>{ico('whatsapp')}<div><strong>{esc(t['whatsapp'])}</strong><a href="{WHATSAPP}" target="_blank" rel="noopener">+57 324 359 1199</a></div></li>
+<li>{ico('behance')}<div><strong>Behance</strong><a href="{REDES[2][1]}" target="_blank" rel="noopener">@marianaboscan</a></div></li></ul></div></div></div></section>'''
 
 
 def sobre_teaser(lang, aqui):
@@ -703,12 +745,12 @@ def sobre_teaser(lang, aqui):
 def cta_home(lang, aqui):
     t = UI[lang]; u = SERV_UI[lang]
     return f'''<section class="pantalla" id="contacto" data-nombre="{esc(t['secciones'][5])}" data-nav="contacto"><div class="wrap"><div class="panel cta-final rev"><h2 class="gigante-m" style="margin-bottom:0">{esc(t['contacto_cta'])}</h2><p class="lead">{esc(t['contacto_lead'])}</p>
-<div class="btns">{btn_contacto(lang, aqui, t['contacto_btn'])}<a class="btn" href="{WHATSAPP}" target="_blank" rel="noopener">{ico('whatsapp')} {esc(u['wa'])}</a></div></div></div></section>'''
+<div class="btns">{botones_contacto(lang)}</div></div></div></section>'''
 
 
 def pagina_inicio(lang):
     t = UI[lang]; aqui = ruta('inicio', lang)
-    cuerpo = hero2(lang, aqui) + enunciado(lang) + galeria(lang, aqui) + servicios_home(lang, aqui) + sobre_teaser(lang, aqui) + cta_home(lang, aqui)
+    cuerpo = hero2(lang, aqui) + enunciado(lang) + galeria(lang, aqui) + (servicios_home(lang, aqui) if MOSTRAR_SERVICIOS else '') + sobre_teaser(lang, aqui) + cta_home(lang, aqui)
     return pagina(lang, aqui, 'inicio', t['titulo_sitio'], t['desc_sitio'], cuerpo, ruta('inicio', 'en' if lang == 'es' else 'es'),
                   extra_head=esquema_home(lang) + '<link rel="preconnect" href="https://cdn.myportfolio.com" crossorigin>\n', extra_body=f'<script src="{rel(aqui, "animar.js")}" defer></script>', body_class='home')
 
@@ -724,12 +766,12 @@ def pagina_contacto(lang):
     t = UI[lang]; aqui = ruta('contacto', lang)
     cuerpo = contacto_seccion(lang, aqui, 'h1')
     return pagina(lang, aqui, 'contacto', f"{t['nav']['contacto']} — Mariana Boscán", t['contacto_lead'], cuerpo, ruta('contacto', 'en' if lang == 'es' else 'es'),
-                  extra_body=contacto_js(lang) + f'<script src="{rel(aqui, "animar.js")}" defer></script>')
+                  extra_body=f'<script src="{rel(aqui, "animar.js")}" defer></script>')
 
 
 # ---------- briefs por servicio (solo accesibles por URL) ----------
 def ruta_brief(k, lang):
-    return ('brief/' if lang == 'es' else 'en/brief/') + BRIEFS[k]['slug'][0 if lang == 'es' else 1] + '/'
+    return ('es/brief/' if lang == 'es' else 'brief/') + BRIEFS[k]['slug'][0 if lang == 'es' else 1] + '/'
 
 
 BRIEF_UI = {
@@ -909,7 +951,7 @@ def escribir(ruta_rel, contenido):
 
 
 def redireccion(desde, hacia):
-    if hacia.startswith('#'): hacia = ('en/' if desde.startswith('en/') else '') + hacia
+    if hacia.startswith('#'): hacia = ('es/' if desde.startswith('es/') else '') + hacia
     base, _, h = hacia.partition('#')
     destino = rel(desde, base) + ('#' + h if h else '')
     return f'''<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Mariana Boscán</title>
@@ -933,20 +975,37 @@ def main():
     urls = []
     for lang in ('es', 'en'):
         for clave, fn in (('inicio', pagina_inicio), ('servicios', pagina_servicios), ('portafolio', pagina_portafolio), ('sobre', pagina_sobre), ('contacto', pagina_contacto)):
+            if clave == 'servicios' and not MOSTRAR_SERVICIOS: continue
             escribir(ruta(clave, lang), fn(lang)); urls.append(ruta(clave, lang))
         for k in ORDEN:
-            escribir(ruta_brief(k, lang), pagina_brief(k, lang))   # no van al sitemap ni tienen enlaces
-        for k in ORDEN:
-            escribir(ruta_serv(k, lang), pagina_servicio(k, lang)); urls.append(ruta_serv(k, lang))
+            if MOSTRAR_SERVICIOS:
+                escribir(ruta_brief(k, lang), pagina_brief(k, lang))   # no van al sitemap ni tienen enlaces
+                escribir(ruta_serv(k, lang), pagina_servicio(k, lang)); urls.append(ruta_serv(k, lang))
+            else:   # se conservan las URLs viejas, pero llevan al portafolio (sin indexar)
+                destino = ruta('portafolio', lang)
+                escribir(ruta_brief(k, lang), redireccion(ruta_brief(k, lang), destino))
+                escribir(ruta_serv(k, lang), redireccion(ruta_serv(k, lang), destino))
+        if not MOSTRAR_SERVICIOS: escribir(ruta('servicios', lang), redireccion(ruta('servicios', lang), ruta('portafolio', lang)))
         for i, p in enumerate(D['proyectos']):
             escribir(proy_ruta(p['s'], lang), pagina_proyecto(i, lang)); urls.append(proy_ruta(p['s'], lang))
         for e in NUEVOS:
             if e.get('imgs'):
                 escribir(proy_ruta(e['slug'], lang), pagina_proyecto_ext(e, lang)); urls.append(proy_ruta(e['slug'], lang))
     for viejo, nuevo in REDIRECCIONES.items(): escribir(viejo, redireccion(viejo, nuevo))
+    # direcciones anteriores (español en la raíz, inglés en /en/) -> nuevas, para no perder enlaces
+    nuevas = set(urls)
+    for u in list(urls):
+        viejo = u[3:] if u.startswith('es/') else 'en/' + u
+        if viejo and viejo not in nuevas and not os.path.exists(os.path.join(DIST, viejo, 'index.html')):
+            escribir(viejo, redireccion(viejo, u))
+    for k in ORDEN:
+        v = SERVICIOS[k]['slug'][0] + '/'
+        if not os.path.exists(os.path.join(DIST, v, 'index.html')): escribir(v, redireccion(v, ruta('portafolio', 'es')))
+    for v, n in (('servicios/', ruta('portafolio', 'es')), ('en/services/', ruta('portafolio', 'en'))):
+        if not os.path.exists(os.path.join(DIST, v, 'index.html')): escribir(v, redireccion(v, n))
     # 404 (GitHub Pages la usa sola)
     escribir('404.html', pagina('es', '', 'inicio', 'No encontrada · Not found — Mariana Boscán', 'Página no encontrada',
-        '<section class="hero wrap"><h1>Esta página <span class="serif">no existe</span></h1><p class="lead">This page doesn’t exist.</p><div class="btns"><a class="btn primario" href="./">Inicio</a><a class="btn" href="en/">Home (EN)</a></div></section>', ''))
+        '<section class="hero wrap"><h1>Esta página <span class="serif">no existe</span></h1><p class="lead">This page doesn’t exist.</p><div class="btns"><a class="btn primario" href="/">Home</a><a class="btn" href="/es/">Inicio (ES)</a></div></section>', ''))
     hoy = date.today().isoformat()
     sm = ''.join(f'<url><loc>{url_abs(u)}</loc><lastmod>{hoy}</lastmod></url>\n' for u in urls)
     open(os.path.join(DIST, 'sitemap.xml'), 'w').write(f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{sm}</urlset>\n')
