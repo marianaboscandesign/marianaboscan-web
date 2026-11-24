@@ -474,7 +474,7 @@ ICONO_CHEV = '<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="
 
 TEMA_HEAD = ''
 TEMA_JS = '''<script>
-(function(){var d=document.querySelector('details.idioma');if(d){document.addEventListener('click',function(e){if(!d.contains(e.target))d.removeAttribute('open')});document.addEventListener('keydown',function(e){if(e.key==='Escape')d.removeAttribute('open')})}})();
+(function(){var bar=document.querySelector('.barra'),bg=document.querySelector('.burger');if(bar&&bg){var cerrar=function(){bar.classList.remove('abierto');bg.setAttribute('aria-expanded','false')};bg.addEventListener('click',function(e){e.stopPropagation();var o=bar.classList.toggle('abierto');bg.setAttribute('aria-expanded',o?'true':'false')});document.addEventListener('click',function(e){if(!bar.contains(e.target))cerrar()});document.addEventListener('keydown',function(e){if(e.key==='Escape')cerrar()});bar.querySelectorAll('.nav a').forEach(function(a){a.addEventListener('click',cerrar)})}var d=document.querySelector('details.idioma');if(d){document.addEventListener('click',function(e){if(!d.contains(e.target))d.removeAttribute('open')});document.addEventListener('keydown',function(e){if(e.key==='Escape')d.removeAttribute('open')})}})();
 </script>'''
 
 
@@ -499,10 +499,11 @@ def cabecera(lang, aqui, clave, otra_ruta):
   <a class="logo" href="{rel(aqui, ruta('inicio', lang))}" aria-label="Mariana Boscán">
     <img class="l-claro" src="{a}mariana-boscan-logo-tinta.svg" alt="Mariana Boscán" width="160" height="46">
     <img class="l-oscuro" src="{a}mariana-boscan-logo-blanco-degradado.svg" alt="" width="160" height="46"></a>
-  <nav class="nav" aria-label="{esc(t['menu'])}">{nav}</nav>
+  <nav class="nav" id="nav-m" aria-label="{esc(t['menu'])}">{nav}</nav>
   <div class="ctl">
     <a class="btn primario cta-nav" href="{base}#contacto"><span>{esc(hc['nav_cta'])}</span><i class="chip">{ico('flecha')}</i></a>
     <details class="idioma"><summary aria-label="{esc(t['idioma_aria'])}">{ICONO_GLOBO}<span>{nombres[lang]}</span>{ICONO_CHEV}</summary><ul>{items}</ul></details>
+    <button class="burger" type="button" aria-label="{esc(t['menu'])}" aria-expanded="false" aria-controls="nav-m"><span></span><span></span></button>
   </div>
 </header></div>'''
 
@@ -713,10 +714,10 @@ z();addEventListener('resize',z);if(document.fonts&&document.fonts.ready)documen
 
 
 HC = {
- 'es': dict(anuncio='Abierta a roles remotos con equipos de EE. UU. · Design Team Lead en Partner in Publishing', anuncio_cta='Escríbeme', nav_exp='Experiencia', et_exp='Experiencia', exp_titulo='Dónde he trabajado', exp_ver='Ver experiencia completa', actual='Actual', fab='Contáctame', fab_t='Abrir opciones de contacto', fab_items=('Escríbeme por correo', 'WhatsApp', 'LinkedIn'), et_obra='Portafolio', et_sobre='Sobre mí', et_contacto='Contacto', stats=[('8+', 'Años de experiencia'), ('5', 'Empresas y agencias'), ('{n}', 'Proyectos en el portafolio'), ('ES · EN', 'Español nativo · Inglés conversacional')], nav_cta='Conectemos', etiqueta='Design Team Lead · Diseñadora gráfica senior',
+ 'es': dict(anuncio='Abierta a roles remotos con equipos de EE. UU. · Design Team Lead en Partner in Publishing', anuncio_cta='Escríbeme', nav_exp='Experiencia', et_exp='Experiencia', exp_titulo='Dónde he trabajado', exp_ver='Ver experiencia completa', actual='Actual', fab='Contáctame', fab_t='Abrir opciones de contacto', fab_items=('Escríbeme por correo', 'WhatsApp', 'LinkedIn'), et_obra='Portafolio', et_sobre='Sobre mí', et_contacto='Contacto', stats=[('8+', 'Años de experiencia'), ('5', 'Empresas y agencias'), ('{n}', 'Proyectos en el portafolio'), ('ES · EN', 'Español nativo · Inglés conversacional')], nav_cta='Conectemos', etiqueta='Diseñadora gráfica senior',
          ahora='Ahora mismo', ahora_t='Liderando el equipo de diseño de una agencia de EE. UU.', chips=['Branding', 'Web', 'UI', 'Design systems', 'Accesibilidad'], cita='“Diseño con estrategia, con foco en el detalle.”',
          titulo='Design Team Lead · Diseñadora gráfica senior', anio='Portafolio', caps=['8+ años de experiencia', 'Branding · Web · UI · Design systems', 'Bogotá · Remoto'], estado='Abierta a roles remotos', scroll='Desliza'),
- 'en': dict(anuncio='Open to remote roles with US teams · Design Team Lead at Partner in Publishing', anuncio_cta='Get in touch', nav_exp='Experience', et_exp='Experience', exp_titulo='Where I’ve worked', exp_ver='View full experience', actual='Current', fab='Let’s talk', fab_t='Open contact options', fab_items=('Email me', 'WhatsApp', 'LinkedIn'), et_obra='Portfolio', et_sobre='About', et_contacto='Contact', stats=[('8+', 'Years of experience'), ('5', 'Companies & agencies'), ('{n}', 'Projects in the portfolio'), ('ES · EN', 'Spanish native · English conversational')], nav_cta='Let’s connect', etiqueta='Design Team Lead · Senior Graphic Designer',
+ 'en': dict(anuncio='Open to remote roles with US teams · Design Team Lead at Partner in Publishing', anuncio_cta='Get in touch', nav_exp='Experience', et_exp='Experience', exp_titulo='Where I’ve worked', exp_ver='View full experience', actual='Current', fab='Let’s talk', fab_t='Open contact options', fab_items=('Email me', 'WhatsApp', 'LinkedIn'), et_obra='Portfolio', et_sobre='About', et_contacto='Contact', stats=[('8+', 'Years of experience'), ('5', 'Companies & agencies'), ('{n}', 'Projects in the portfolio'), ('ES · EN', 'Spanish native · English conversational')], nav_cta='Let’s connect', etiqueta='Senior Graphic Designer',
          ahora='Right now', ahora_t='Leading the design team at a US-based agency', chips=['Branding', 'Web', 'UI', 'Design systems', 'Accessibility'], cita='“Strategic design, obsessed with the details.”',
          titulo='Design Team Lead · Senior Graphic Designer', anio='Portfolio', caps=['8+ years of experience', 'Branding · Web · UI · Design systems', 'Bogotá · Remote'], estado='Open to remote roles', scroll='Scroll'),
 }
@@ -920,7 +921,7 @@ document.addEventListener('click',function(e){{if(!f.contains(e.target))c()}});d
 
 def estadisticas(lang):
     n = len(D['proyectos']) + len(NUEVOS)
-    items = ''.join(f'<li><b>{esc(v.replace("{n}", str(n)))}</b><span>{esc(k)}</span></li>' for v, k in HC[lang]['stats'])
+    items = ''.join(f'<li><b>{esc(v.replace("{n}", str(n)))}</b><span>{esc(k).replace(" · ", "<br>")}</span></li>' for v, k in HC[lang]['stats'])
     return f'<section class="stats" aria-label="{esc(HC[lang]["et_sobre"])}"><div class="wrap"><ul>{items}</ul></div></section>'
 
 
