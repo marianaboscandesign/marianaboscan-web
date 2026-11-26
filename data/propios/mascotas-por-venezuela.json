@@ -13,6 +13,10 @@
  "fecha": "2026-11-26",
  "imgs": [
   [
+   "proyectos/mascotas-por-venezuela/video.mp4",
+   56.25
+  ],
+  [
    "proyectos/mascotas-por-venezuela/01.webp",
    125.0
   ],
@@ -55,11 +59,8 @@
    "proyectos/mascotas-por-venezuela/09.webp",
    120.26,
    1
-  ],
-  [
-   "proyectos/mascotas-por-venezuela/video.mp4",
-   56.25
   ]
  ],
- "slug": "mascotas-por-venezuela"
+ "slug": "mascotas-por-venezuela",
+ "web": "https://mascotasporvenezuela.com"
 }

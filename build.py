@@ -470,9 +470,10 @@ def pagina_proyecto_ext(e, lang):
         if len(m) > 2 and m[2] and piezas: piezas[-1].append(img)
         else: piezas.append([img])
     piezas = [f'<div class="serie">{"".join(g)}</div>' for g in piezas]
+    web_btn = (f'<a class="btn primario" href="{esc(e["web"])}" target="_blank" rel="noopener">{"Visitar la página en vivo" if lang == "es" else "Visit the live site"} ↗</a>' if e.get('web') else '')
     cuerpo = cab_int(CATS[e.get('cat', 'branding')][0 if lang == 'es' else 1], esc(e['marca']), esc(desc)) + f'''
 <section class="wrap pila-int"><div class="pila">{''.join(piezas)}</div>
-<div class="pager"><a class="btn" href="{rel(aqui, ruta('portafolio', lang))}">← {esc(t['volver'])}</a><a class="btn" href="{esc(e['link'])}" target="_blank" rel="noopener">{esc(t['ver_behance'])} ↗</a></div></section>''' + cta_interna(lang, aqui)
+<div class="pager"><a class="btn" href="{rel(aqui, ruta('portafolio', lang))}">← {esc(t['volver'])}</a>{web_btn}<a class="btn" href="{esc(e['link'])}" target="_blank" rel="noopener">{esc(t['ver_behance'])} ↗</a></div></section>''' + cta_interna(lang, aqui)
     otra = proy_ruta(e['slug'], 'en' if lang == 'es' else 'es')
     return pagina(lang, aqui, 'portafolio', f"{e['marca']} — {desc} | Mariana Boscán", f"{e['marca']}: {desc}. {t['desc_sitio']}"[:250], cuerpo, otra, og_img=e['imgs'][0][0] if e['imgs'][0][0].startswith('http') else SITIO + '/img/' + e['imgs'][0][0], extra_body=INT_JS(aqui), body_class='interna')
 
