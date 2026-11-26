@@ -1,0 +1,65 @@
+{
+ "id": "mascotas-por-venezuela",
+ "marca": "Mascotas por Venezuela",
+ "des": "Plataforma web para reencontrar mascotas con sus familias",
+ "den": "Web platform reuniting lost pets with their families",
+ "cat": "web",
+ "cats": [
+  "web",
+  "branding"
+ ],
+ "cover": "",
+ "link": "https://www.behance.net/gallery/258864017/Mascotas-por-Venezuela-Bringing-Lost-Pets-Home",
+ "fecha": "2026-11-26",
+ "imgs": [
+  [
+   "proyectos/mascotas-por-venezuela/01.webp",
+   125.0
+  ],
+  [
+   "proyectos/mascotas-por-venezuela/02.webp",
+   125.0,
+   1
+  ],
+  [
+   "proyectos/mascotas-por-venezuela/03.webp",
+   125.0,
+   1
+  ],
+  [
+   "proyectos/mascotas-por-venezuela/04.webp",
+   125.0,
+   1
+  ],
+  [
+   "proyectos/mascotas-por-venezuela/05.webp",
+   125.0,
+   1
+  ],
+  [
+   "proyectos/mascotas-por-venezuela/06.webp",
+   125.0,
+   1
+  ],
+  [
+   "proyectos/mascotas-por-venezuela/07.webp",
+   125.0,
+   1
+  ],
+  [
+   "proyectos/mascotas-por-venezuela/08.webp",
+   125.0,
+   1
+  ],
+  [
+   "proyectos/mascotas-por-venezuela/09.webp",
+   120.26,
+   1
+  ],
+  [
+   "proyectos/mascotas-por-venezuela/video.mp4",
+   56.25
+  ]
+ ],
+ "slug": "mascotas-por-venezuela"
+}

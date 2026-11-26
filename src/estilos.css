@@ -1118,3 +1118,5 @@ html.mo .sw{display:inline-flex;vertical-align:baseline}
 @media(max-width:899px){.hc-h1{font-size:clamp(32px,9.4vw,60px)}}
 @media(max-width:520px){.hc .btns{gap:10px}.hc .btns .btn{padding:10px 12px 10px 18px;font-size:15px}.hc .btns .chip{width:34px;height:34px}}
 @media(max-width:820px){.barra .nav{left:8px;right:8px}}
+
+.serie video{display:block;width:100%;height:auto;background:#000}

@@ -25,5 +25,11 @@
   var io = new IntersectionObserver(function (es) {
     es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('vis'); io.unobserve(e.target); } });
   }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
-  $('.cab-int, .rejilla > li, .pila > *, .pager, .hoja, #contacto').forEach(function (el) { io.observe(el); });
+  // las piezas muy altas (páginas largas cortadas en tramos) nunca llegan al 12 % visible: se revelan en cuanto asoman
+  var ioAlto = new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('vis'); ioAlto.unobserve(e.target); } });
+  }, { threshold: 0, rootMargin: '0px 0px -6% 0px' });
+  $('.cab-int, .rejilla > li, .pila > *, .pager, .hoja, #contacto').forEach(function (el) {
+    (el.offsetHeight > innerHeight * 3 ? ioAlto : io).observe(el);
+  });
 })();

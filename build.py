@@ -30,7 +30,13 @@ def _norm(t):
     t = unicodedata.normalize('NFKD', t).encode('ascii', 'ignore').decode().lower()
     return re.sub(r'[^a-z0-9]+', '-', t).strip('-')
 if os.path.exists(_nf):
-    NUEVOS = sorted(json.load(open(_nf, encoding='utf-8')), key=lambda e: e.get('fecha', ''), reverse=True)
+    NUEVOS = json.load(open(_nf, encoding='utf-8'))
+# Proyectos propios: cada archivo data/propios/<nombre>.json es un proyecto completo (con sus imágenes locales); no hace falta tocar behance_nuevos.json
+_pd = os.path.join(AQUI, 'data', 'propios')
+if os.path.isdir(_pd):
+    for _f in sorted(os.listdir(_pd)):
+        if _f.endswith('.json'): NUEVOS.append(json.load(open(os.path.join(_pd, _f), encoding='utf-8')))
+NUEVOS = sorted(NUEVOS, key=lambda e: e.get('fecha', ''), reverse=True)
 def limpio(t):
     """Arregla textos con entidades HTML (&amp; → &) aunque vengan doblemente codificados."""
     for _ in range(4):
@@ -50,7 +56,7 @@ def categorias_de(e):
 for _e in NUEVOS:
     for _k in ('marca', 'des', 'den'): _e[_k] = limpio(_e.get(_k, ''))
     _m = re.search(r'/gallery/\d+/([^/?#]+)', _e['link'])
-    _e['slug'] = _norm(_m.group(1)) if _m else 'proyecto-' + str(_e['id'])
+    _e['slug'] = _e.get('slug') or (_norm(_m.group(1)) if _m else 'proyecto-' + str(_e['id']))
     _e['clave'] = _norm(_e['marca'])      # las imágenes pueden llamarse por ID (258152879.json) o por marca (flick.json)
     for _n in (str(_e['id']), _e['clave']):
         _fi = os.path.join(AQUI, 'data', 'imagenes', _n + '.json')
@@ -456,7 +462,11 @@ def pagina_proyecto_ext(e, lang):
         url, pct = m[0], (m[1] if len(m) > 1 else None)
         if not url.startswith('http'): url = rel(aqui, 'img/') + url          # imagen local: img/proyectos/<id>/NN.webp
         dims = f' width="1000" height="{round(pct * 10)}"' if pct else ''
-        img = f'<img src="{esc(url)}" alt="{esc(e["marca"])} — {esc(desc)}"{dims} loading="{"eager" if i == 0 else "lazy"}" decoding="async">'
+        if url.endswith('.mp4'):      # video propio: se reproduce solo, sin sonido y en bucle (con controles)
+            img = (f'<video src="{esc(url)}" poster="{esc(url[:-4])}.webp" width="1000" height="{round((pct or 56.25) * 10)}" autoplay muted loop playsinline controls preload="metadata" '
+                   f'aria-label="{esc(e["marca"])} — {esc(desc)}"></video>')
+        else:
+            img = f'<img src="{esc(url)}" alt="{esc(e["marca"])} — {esc(desc)}"{dims} loading="{"eager" if i == 0 else "lazy"}" decoding="async">'
         if len(m) > 2 and m[2] and piezas: piezas[-1].append(img)
         else: piezas.append([img])
     piezas = [f'<div class="serie">{"".join(g)}</div>' for g in piezas]
